@@ -241,6 +241,21 @@ searches can still locate the keys in $u$).
 %TODO: some section about linearizability?
 
 \subsubsection{Complexity}
+Sequential search takes $O(\log_B{N} + \log_{\alpha}{\log_2{B}})$ block
+transfers (with high probability). The probabilistic bound comes from the
+probabilistic key promotion property. The intuition behind the proof of this
+bound comes from the argument that when the tree has height $h =
+\Omega(\log_{\alpha}{\log_2{\log_2{N}}})$, then the total number of keys in the
+tree is $O(2^{\alpha^h})$. The proof is then completed by summing over the
+range of $h$ which is probabilistic $O(\log_{\alpha}{\log_2{N}})$, the access
+time from some level $h$ to find the correct child.
+
+Sequential insert takes $O(\log_B{N} + \log{\alpha}{\log_2{B}})$ block
+transfers (in expectation). This proof is constructed in a similar 
+fashion as the search proof: consider inserting a tree at some height $h$.
+By noting that the probability a particular node reaches height $h$
+is $2^{-(\alpha^h-1)/(\alpha-1)}$, a summation over all levels
+of the cost of rebuilding a node yields the time-bound.
 
 \subsection{Packed Memory Array CO B-tree}
 \label{sec:pma}
@@ -291,6 +306,17 @@ and then release the locks.
 
 \subsubsection{Complexity}
 
+% TODO: can somebody check this time-bound? seems kind of bad
+Sequential search time-bounds are not presented in the paper,
+but presumably since search is a static CO tree lookup followed
+by a scan, the time bound is $O(\log_{B}{N} + {\log_2{N}}/{B} + 1)$.
+
+Sequential insert is $O(\log_{B}{N} + \log_2^2{N}/{B} + 1)$. The proof
+is based off an accounting argument which places $\Theta(\log_2^2{m}/B)$
+dollars in each array slot. The proof is not presented in any detail in the
+paper, but rather it is a slightly-modified version of the proof presented
+in \cite{Katriel02}. 
+
 \subsubsection{Lock-free Variant}
 The lock-free variant is based on the PMA CO tree, except the locks acquired
 during the PMA modification are replaced by augmenting each element in the PMA
@@ -309,9 +335,11 @@ all work in a non-blocking manner (they can fail at any point).
 The concurrency protocol works as follows. Any of the non-blocking primitives
 are initiated by denoting the cell in question with the marker. If a process
 ever encounters a cell with a marker, it drops what it is doing and first helps
-to complete the operation. The implementation of the non-blocking primitives
-is spelled out in more detail in \cite{BenderFiGi05}, but the basic idea is
-using LL/SC to detect when concurrent operations are on-going.
+to complete the operation. When the originating process gets context-switched
+back in, any SCs will fail, and then the process can check to see if the
+operation was already completed. The implementation of the non-blocking
+primitives is spelled out in more detail in \cite{BenderFiGi05}, but the basic
+idea is using LL/SC to detect when concurrent operations are on-going.
 
 \subsubsection{Lock-free Variant Operations}
 
@@ -326,6 +354,8 @@ found, the rebalancing-to-the-right is performed as before.  However, a
 store-conditional (SC) is performed on the destination of each cell.  If any SC
 fails, then this means concurrent modification had occurred, in which case the
 algorithm restarts from the beginning.
+
+\section{Conclusion}
 
 %\end{document}  % This is where a 'short' article might terminate
 

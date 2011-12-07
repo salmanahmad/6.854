@@ -28,6 +28,8 @@
 
 \documentclass{style}
 
+\usepackage{paralist}
+
 \begin{document}
 
 \title{Cache Oblivious B-trees}
@@ -96,6 +98,15 @@ Stephen Tu\\
 % is the number that will appear on the first page PLUS the
 % number that will appear in the \additionalauthors section.
 
+\newcommand{\lhyperceil}{\lceil\lceil}
+\newcommand{\rhyperceil}{\rceil\rceil}
+\newcommand{\lhyperfloor}{\lfloor\lfloor}
+\newcommand{\rhyperfloor}{\rfloor\rfloor}
+
+\newcommand{\Search}{\textsc{Search(k)}}
+\newcommand{\Insert}{\textsc{Insert(k, v)}}
+\newcommand{\Scan}{\textsc{Scan(a, b)}}
+
 \maketitle
 \begin{abstract}
 Fill me in
@@ -143,11 +154,178 @@ Fill me in
 
 \section{Concurrency}
 
+\subsection{Motivation}
+B-trees are often used as an indexing data structure for various
+database and file systems. Thus, for a cache-oblivious B-tree data structure
+to be of practical value, it must be able to handle concurrent access and modification
+of its internal state. The straw-man solution is to simply ensure mutual exclusion
+on the entire data structure; this approach, however, yields poor performance.
+
+Various concurrency schemes for traditional cache-aware B-trees have been
+proposed \cite{BayerS77, LehmanY81}. We now survey a concurrency scheme for CO
+B-trees, first presented in \cite{BenderFiGi05}. Bender develops two different
+data structures to solve this problem: the first is an exponential CO B-tree,
+the second is a CO B-tree based on a packed memory array (PMA). Bender
+also presents a lock-free variant of the latter data structure. For
+the remainder of the discussion, assume that the keys are fixed-size integer
+keys.
+
 \subsection{Description}
+Before describing the data structures in more detail, we first consider
+the concurrency model which is used throughout \cite{BenderFiGi05}.
 
-\subsection{Operators}
+\subsubsection{Concurrency Model}
+The concurrency model starts with a system that has a total cache
+size of $M$ and block size of $B$. There are $P$ processors in the
+system, each with a cache of size $\frac{M}{P}$. A particular block
+can reside in multiple caches in \textit{shared} mode. However, if a
+processor wants to perform a write to a block, it must acquire it in 
+\textit{exclusive} mode, in which case that block can only reside in
+a single cache. In this model, a request for a block costs a single
+memory transfer.
 
-\subsection{Complexity}
+For concurrency control, two primitives are used. The first is
+locks. The second is \textit{load-linked/store-conditional} (LL/SC).
+The authors argue that LL/SC provides better performance than 
+using a \textit{compare-and-swap} (CAS) primitive, but their 
+techniques can be extended to use CAS.
+
+\subsection{Exponential CO B-tree}
+This data structure is based on a strongly weight-balanced 
+exponential tree found in \cite{Bender2002}. A tuning parameter
+$1 < \alpha < 2$ is chosen for the data structure. Each node
+in the tree maintains both keys which divide up its children,
+in addition to a \textit{right-link} pointer, which contains
+both a pointer to a node's right sibling, plus the key
+value of the minimum key in the node's right sibling. If no such
+sibling exists, a sentinel $\infty$ pointer is used.
+
+A node's layout in memory is as follows. Suppose a node has $k$
+elements in it. The first part of the node consists of a static
+CO search B-tree, containing the $k$ elements. The tree is sized
+to be a complete $\lhyperceil k \rhyperceil$-leaf tree. The second
+part of the node consists of a $\lhyperceil k \rhyperceil$-size array
+contained the $k$ elements in sorted order. The leaf nodes of the
+CO search tree point to the associated entries in the array.
+
+\subsubsection{Operations}
+The operations supported by the exponential CO B-tree are \Search{}
+and \Insert{}. The authors do not discuss range-queries, and this
+is presumably due to the concurrency issues in implementing a fully-consistent
+range scan (weakly-consistent range scans could be implemented in the data
+structure with very little modification), although interestingly enough
+the PMA variant of B-tree (discussed in Section \ref{sec:pma}) does
+cover range scans. 
+
+\Search{} works as follows. For a non-leaf node, first check the
+\textit{right-link} key. If the \textit{right-link} key is less than
+$k$, then traverse the right link, and recurse. Otherwise, follow
+the appropriate child pointer. When a leaf node is reached, only
+follow \textit{right-link} pointers, until either $k$ has been located
+or some element greater than $k$ is reached. No locks are acquired
+during the entire search operation.
+
+\Insert{} works as follows. First, \Search{} is used to locate the leaf node
+where $k$ will be inserted into. A lock is acquired on that node, $k$ is
+inserted, and the lock is released. Unlike a standard B-tree, there is no
+maximum number of elements in a node; instead we split nodes probabilistically.
+With probability ${1}/{2^{\alpha^h}}$, a node at height $h$ is split (leaf
+nodes have $h = 0$). A split works as follows.  We reacquire a lock on the node
+to be split. We split the node into $u$ and $u'$, where $u$ contains all the
+keys $< k$, and $u'$ contains the keys $\geq k$. We release the lock, and
+recursively insert $k$ into the parent of the split node. It is important
+to note that, since $u$ contains a prefix of the original node to be split,
+that we reuse the original node in constructing $u$ (that way, concurrent
+searches can still locate the keys in $u$).
+
+%TODO: some section about linearizability?
+
+\subsubsection{Complexity}
+
+\subsection{Packed Memory Array CO B-tree}
+\label{sec:pma}
+The PMA CO B-tree is a two level data structure, containing a static
+CO B-tree which indexes into a packed-memory array. Bender introduces
+a new packed-memory array, called a \textit{one-way packed-memory array},
+which they argue is easier to manage concurrently.
+
+\subsubsection{One-Way PMA Primer}
+
+A one-way packed-memory array is a contiguous memory structure which has three
+distinct regions: a leftmost region of empty space, an \textit{active region}
+which contains the elements of the array, and a rightmost region of empty
+space. The array only grows into the rightmost region, and shrinks from the
+leftmost region (hence one-way).  The PMA is of size $m = \Theta(N)$, subject
+to $m$ being a power of $2$, where $N$ is the number of elements.
+
+When the \textit{active region} becomes too large/small due to inserts/deletes,
+the PMA is rebalanced. A new array is allocated, and the elements are
+spread out evenly over the new array (too minimize element density).
+
+Each leaf in the static CO B-tree used is a pointer into a $\Theta(\log
+N)$-size region in the packed-memory array. 
+
+\subsubsection{Operations}
+
+\Search{} works as follows. Search the static tree for $k$ until
+a leaf node is reached. Follow the leaf node pointer into the PMA.
+Scan right in the PMA until either $k$ is located, or some element
+$> k$ is reached. Do not acquire any locks during the search.
+
+\Insert{} works as follows. Use \Search{} to locate the $\Theta(\log N)$-region
+of the PMA which (would) contain $k$. Lock the region, and scan right to find
+the appropriate slot $s$ to place $k$ into. $s$ is defined such that slot $s -
+1$ contains the largest key smaller than $k$. If scanning forward requires
+going into the next $\Theta(\log N)$-region, lock the next region and release
+the current region (\textit{hand-over-hand} locking technique). Once $s$
+is located, either $s$ is free, in which case just insert $k$, or $s$ is not free,
+in which case a \textit{rebalance} operation is required.
+
+To do a rebalance operation, we scan right (locking as necessary) until the
+region from $s$ to the current position $s'$ is not \textit{too dense}. The
+notion of density is defined in detail in \cite{BenderFiGi05}. The region
+$[s, s']$ is then rebalanced as follows. Start from the rightmost element,
+and move elements to the right (maintaining order) such that no suffix of
+$[s, s']$ is too dense. This rebalancing creates room for $k$; we insert $k$
+and then release the locks.
+
+\subsubsection{Complexity}
+
+\subsubsection{Lock-free Variant}
+The lock-free variant is based on the PMA CO tree, except the locks acquired
+during the PMA modification are replaced by augmenting each element in the PMA
+with a marker. A marker is used to denote the ongoing (concurrent) operation
+of a particular cell.
+
+In addition, four non-blocking primitives are introduced:
+\begin{inparaenum}[(a)]
+  \item \textit{move},
+  \item \textit{cell-insertion},
+  \item \textit{cell-deletion}, and
+  \item \textit{read}
+\end{inparaenum}. These primitives are self-explanatory, except they
+all work in a non-blocking manner (they can fail at any point).
+
+The concurrency protocol works as follows. Any of the non-blocking primitives
+are initiated by denoting the cell in question with the marker. If a process
+ever encounters a cell with a marker, it drops what it is doing and first helps
+to complete the operation. The implementation of the non-blocking primitives
+is spelled out in more detail in \cite{BenderFiGi05}, but the basic idea is
+using LL/SC to detect when concurrent operations are on-going.
+
+\subsubsection{Lock-free Variant Operations}
+
+\Search{} is un-modified from the lock-based version.
+
+\Insert{} is modified as follows. Cell $s$ is located as before. A
+\textit{cell-insertion} operation is performed on $s$. If it succeeds, we are
+done. If it fails, then a rebalance is necessary. Rebalance proceeds as before,
+scanning right to find the region $[s, s']$. However, whenever a non-empty cell
+is encountered, a load-link (LL) is performed on the cell.  Once the region is
+found, the rebalancing-to-the-right is performed as before.  However, a
+store-conditional (SC) is performed on the destination of each cell.  If any SC
+fails, then this means concurrent modification had occurred, in which case the
+algorithm restarts from the beginning.
 
 %\end{document}  % This is where a 'short' article might terminate
 

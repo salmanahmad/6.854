@@ -29,6 +29,8 @@
 \documentclass{style}
 
 \usepackage{paralist}
+\usepackage{graphicx}
+
 
 \begin{document}
 
@@ -110,7 +112,9 @@ Stephen Tu\\
 
 \maketitle
 \begin{abstract}
-Fill me in
+
+Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+
 \end{abstract}
 
 \section{Introduction}
@@ -128,12 +132,32 @@ Fill me in
 \subsection{Original CO B-trees}
 \label{sec:original}
 
+Bender et al. first introduced a cache oblivious B-tree (CO B-tree) in \cite{cob tree}. The
+CO B-tree was able to match the optimum search bound of $\Theta(log_B N)$ memory transfers 
+without including any memory-specific parameterization describe the speed or sizes
+of the machines memory hierarchy. 
 
-\subsection{Structure}
+The CO B-tree is able to achieve this bound by structuring its elements as a strongly weight-balanced
+search tree (SWBST). The SWBST is then laid out into a packed memory array (PMA) using a van Emde Boas (vEB) layout.
+
+\subsection{Structure - SWBST}
 \label{sec:structure}
 
-\subsection{Layout}
+
+
+\subsection{Layout - PMA}
 \label{sec:layout}
+
+\begin{figure}
+
+\begin{center}
+	\includegraphics[width=0.8\columnwidth]{figures/veb.png}
+\end{center}
+
+\caption{An illustration of the van Emde Boas (vEB) layout}
+\label{fig:veb}
+\end{figure}
+
 
 \subsection{Complexity}
 
@@ -176,7 +200,18 @@ $F_k$ is the $kth$ Fibonacci number that is stickily less than the height of
 the tree. Thus if a tree's height happens to be a Fibonacci number, $F_k$,
 then the shuttle tree will choose to split the tree at height $F_{k-1}$. The
 top and bottom ``halves'' produced by this split are organized just like
-before and shown in Figure ???.
+before and shown in Figure \ref{fig:veb}.
+
+\begin{figure}
+
+\begin{center}
+	\includegraphics[width=0.8\columnwidth]{figures/veb.png}
+\end{center}
+
+\caption{An illustration of how the shuttle tree determines the size of a node's linked list}
+\label{fig:buffers}
+\end{figure}
+
 
 The shuttle tree improves the efficiency of insertion by adding buffers to
 each node in the tree. In fact, shuttle tree nodes have a linked list of
@@ -184,7 +219,7 @@ buffers rather than a single buffer like BRT and each of these buffers is
 another shuttle tree. The length of a node's linked list is related to the
 node's height in the tree. A node has a buffer for every time it the leaf of a
 sub trees that is split when creating the vEB layout. This idea is illustrated
-in Figure ???.
+in Figure \ref{fig:buffers}.
 
 The shuttle tree's node's buffers have a maximum capacity that is enforced by
 bounding it height. The size of the buffers increases going across the linked

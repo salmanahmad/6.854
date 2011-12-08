@@ -201,9 +201,44 @@ SWBST is only one half of the CO B-tree story...
 
 \section{Variable Length Strings}
 
+\subsection{Motivation}
+In order for B-trees to remain versatile, they must be able to accommodate various forms of data. However, traditional B-trees and string B-trees have suboptimal performance when variable length strings are used as keys. In \cite{BenderFaKu06}, Bender et al. describe 4 major issues:
+\begin{itemize}
+\item B-trees handle variable length keys poorly
+\item string B-trees do not support compression, and the front compression used in many other B-trees is handled sub-optimally
+\item range queries are handled sub-optimally by regular B-trees, since they result in random disk seeks
+\item traditional and string B-trees assume fixed block-transfer size B at all levels of the memory hierarchy, resulting in sub-optimal performance over hierarchies with varied block-transfer sizes.
+\end{itemize}
 \subsection{Description}
+They address these issues by designing a Cache Oblivious String B-tree.
 
+\subsubsection{General COSB-tree Structure}
+The static COSB-tree consists of 2 layers: a centroid tree at the top, and an array of the keys stored in lexicographic order on the bottom. The leaves of the centroid tree contain pointers to keys in the array. The centroid tree is structured such that a search through the centroid tree identifies the local area of the desired key in the array. Then a sequential scan is performed across the array to find the key.
+
+The Dynamic COSB-tree consists of 3 major components: a centroid tree at the top; a packed memory array (PMA) structure of hash data for the keys known as the \emph{hashdata} layer; and on the bottom a PMA structure for the original key values, compressed using an augmented version of forward compression known as the \emph{keydata} layer.
+
+The centroid tree on a high level behaves similarly for static and dynamic COSB-trees. The leaves of the centroid tree point into the hashdata layer, where a sequential scan is performed to find the correct key by hash value. The hashdata layer points directly into the keydata layer, where the appropriate key is decoded, compared and returned.
+
+In the following subsections, centroid trees are explained, and a summary of how to modify them to preserve weight balance in the dynamic case is provided. Two iterations on forward compression are also summarized to show how to incrementally add support for variable length strings as keys for dynamic COSB-trees. Lastly, the design and use of the hashdata and keydata are explained.
+
+\subsubsection{The Dictionary Matching Problem and Centroid Trees} %todo:cite dictionary matching problem--sources in cosb-tree paper
+In this approach to solving the dictionary matching problem, a dictionary $D$ of $N$ keys is preprocessed using hashing and divide-and-conquer via the construction of a centroid tree over the keys. This technique forms the basis for the Cache Oblivious String B-tree (COSB-tree) design. Consider the compacted trie $T$ of $D$. Bender et al. observe that there exists a centroid vertex $\rho$ in $T$ such that $\rho$ has between N/3 and 2N/3 descendants, inclusive. When searching for a key $k$ in the compacted trie, you traverse the tree as follows: for each node $y$ that you visit, if $y$ is a prefix of $x$, or $y$ matches $x$, continue on into the trie rooted at $y$ or \emph{down trie} of $y$. Otherwise traverse the trie resulting from excluding $y$ and its subtree. The \emph{centroid tree} is obtained by rooting the tree at \emph{centroid vertex} $\rho$, and making its children recursively defined \emph{centroid trees} of its up and down tries. 
+
+At each step through the centroid tree, a consistent fraction of the nodes are eliminated from the search, resulting in an $O(logN)$ time bound when ignoring the time required to operate on keys. To make key comparisons faster, the keys are hashed and hash values are compared in place of the original key values. To avoid mismatches due to overlap in hash values, the original key values are compared after finding a match in hash values. The resulting time bound for \Search{} (interchangeable with \Member{}) is $O(||k||+logN)$. If each node in the centroid tree knows its successor and predecessor descendants, \Pred{} and \Succ{} can be achieved in $O(||k||+||k'||+logN)$, where $k'$ is the successor or predecessor of $k$. Note that the additive $logN$ incurred by the use of centroid trees can be avoided when using main memory. Centroid trees are used to capitalize on locality for the cache oblivious string B-tree design, described later in this section.
+
+For COSB-trees, the centroid tree is built using $O(N/logN)$ keys, and the centroid tree is layed out in memory using a modified van Emde Boas (vEB) layout for weight-balanced binary trees. The \emph{hyperhyperfloors} of nodes are used as a guide for cutting the tree into equal-size subtrees for the vEB layout. The \emph{hyperhyperfloor} of x is denoted as $\lhyperfloor{}x\rhyperfloor{}$, and refers to rounding x down to the nearest power of a power of 2. This ensures trees of equal size on all \emph{levels of detail}, as the centroid tree is traversed.
+
+\subsubsection{Modifying Front Compression to Preserve Locality}
+This section provides a brief summary of how front compression is modified to optimize compression and decoding for static and dynamic cache-oblivious string B-trees. Consider a sequence of $j$ keys to store $k_{1}$,  $k_{2}$, ...,  $k_{j}$. Without compression, this requires $\sum_{j}||k_{j}||$ space in memory. To compress these keys using front compression, let $\pi_{j}$ be the longest common prefix between $k_{j}$ and $k_{j+1}$. Now instead we store the keys as follows: 
+\begin{center}
+$k_{1}$,$||\pi_{2}||$,$\sigma_{2}$,$||\pi_{3}||$$\sigma_{3}$,...,$||\pi_{j}||$,$\sigma_{j}$
+\end{center}
+where $\sigma_{j}$ is the suffix of $k_{j}$ after removing the first $\pi_{j}$ bits. This saves almost $\sum_{j}||\pi_{j}||$ memory. However, since decoding $k_{j}$ involves concatenating the first $\pi_{j}$ bits of $k_{j-1}$ to $\sigma_{j}$, $k_{j-1}$ must be decoded. $k_{j-1}$ may depend on previous keys as well, making $k_{j}$ expensive to decode.
+
+The goal of modifying front compression is to maintain some of the space benefits to compression while reducing the high decoding cost and keeping the size of D small. Bender et al.  provide a modification that reduces the high decoding cost of front compression of D to $O(1+||k||B)$, with size $O(\ll{D}\gg)$ after compression. The modification works as follows: Let $c = 2 + \epsilon/2$, and let $k_{1}$ be the first key added to the compression stream. For each subsequent key $k_{i}$, if $k_{i}$ can be decoded with just the last $c||k_{i}||$ characters, add $\pi_{i}$,$\sigma_{i}$ like before. Otherwise, add 0,$k_{i}$, which means add $k_{i}$ to the stream in its uncompressed form. By construction, this scheme guarantees that any key $k_{j}$ can be decoded in $O(1+||k||B)$ memory transfers.%todo: add something about why this isO(<<D>>)?
+%todo: add another paragraph or two about the second iteration
 \subsection{Operators}
+The operations supported are
 
 \subsection{Complexity}
 

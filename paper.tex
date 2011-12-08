@@ -113,6 +113,16 @@ Stephen Tu\\
 \maketitle
 \begin{abstract}
 
+This paper presents a survey of cache-oblivious B-tree data structures. Memory hierarchies . 
+Since memory transfers often dominate the runtimes of an algorithm it makes sense to
+develop data structure that are optimized not in terms of the number of instructions it executes; but rather, 
+by the number of memory accesses and transfers it has to perform. Among these so called ``external-memory'' data structures,
+the B-tree is widely used as it is able to perform \Search in an optimal number of memory transfers. 
+However, a short coming of B-trees is that they require knowledge of the size of the memory blocks, thus 
+it is a cache aware data structure. This gave rise to the notion of cache-oblivious algorithms, e.g. data structures
+that perform well regardless of the size of the memory blocks or the number hierarchies. Bender et al. 
+introduced the cache-oblivious B-tree which ...
+
 Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
 \end{abstract}
@@ -132,21 +142,51 @@ Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor 
 \subsection{Original CO B-trees}
 \label{sec:original}
 
-Bender et al. first introduced a cache oblivious B-tree (CO B-tree) in \cite{cob tree}. The
+Bender et al. first introduced a cache oblivious B-tree (CO B-tree) in \cite{cobtree}. The
 CO B-tree was able to match the optimum search bound of $\Theta(log_B N)$ memory transfers 
-without including any memory-specific parameterization describe the speed or sizes
-of the machines memory hierarchy. 
+without including any specific parameterization describing the speed or sizes
+of the machine's memory hierarchy. 
 
-The CO B-tree is able to achieve this bound by structuring its elements as a strongly weight-balanced
-search tree (SWBST). The SWBST is then laid out into a packed memory array (PMA) using a van Emde Boas (vEB) layout.
+The CO B-tree paper presents three different data structures that make 
+different trade off in the number of memory transfer they perform. However, all of them 
+achieve their performance by structuring their elements as a strongly weight-balanced
+search tree (SWBST). The SWBST is then laid out into a packed memory array (PMA) 
+using a van Emde Boas (vEB) layout. The SWBST and PMA play crucial roles in the
+other cache-oblivious data structures that were developed after the CO B-tree and thus are
+described at length in the next two sections. 
 
 \subsection{Structure - SWBST}
 \label{sec:structure}
 
+Strongly weight-balanced search trees play a key role in CO B-tree. The weight of a node is $u$ is equal to
+the total number of $u$'s descendants plus 1. It can als be thought of as the sum of the weights of $u$'s children plus 1.
+Formally, $u$'s weight is: $w(u) = 1 + \sum_{v \in children} w(v)$.  
 
+Most weight-balanced search trees which requires that the heights of a node's left and right subtrees are
+simply off by a constant factor. SWBST enforce the stronger property that a node at height $h$ in the tree (height is the node's
+distance from the leaves; leaves have a height of 1) has $\Theta c^h$ where $c$ is some constant. 
+
+A known data structure that achieves this property is the ``weight-balanced B-tree'' \cite{paper}. The CO B-tree leverages this
+data structure to maintain its elements. The next section describes how SWBST perform various operations
+while maintain their strongly weight-balanced property.
+
+\subsection{Operations}
+
+The CO B-tree supports \Search, \Insert, \Delete, and \Scan operations. 
+
+\subsection{Complexity}
+
+
+
+It should be noted, that keeping the level of indirection sorted is only needed in case we want
+to perform \Scan operations. If we do not need \Scan, then we can keep the indirection array in any arbitrary order
+reducing the cost of \Insert and \Delete by the $(log^2 N) /B$ factor making them incur $O(log_{B} N)$ memory transfers
+overall. 
 
 \subsection{Layout - PMA}
 \label{sec:layout}
+
+SWBST is only one half of the CO B-tree story...
 
 \begin{figure}
 
@@ -158,10 +198,6 @@ search tree (SWBST). The SWBST is then laid out into a packed memory array (PMA)
 \label{fig:veb}
 \end{figure}
 
-
-\subsection{Complexity}
-
-\subsection{Operations}
 
 \section{Variable Length Strings}
 

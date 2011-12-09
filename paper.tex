@@ -117,18 +117,21 @@ Stephen Tu\\
 \maketitle
 \begin{abstract}
 
-This paper presents a survey of cache-oblivious B-tree data structures. Memory
-hierarchies . Since memory transfers often dominate the runtimes of an
-algorithm it makes sense to develop data structure that are optimized not in
-terms of the number of instructions it executes; but rather, by the number of
-memory accesses and transfers it has to perform. Among these so called
-``external-memory'' data structures, the B-tree is widely used as it is able
-to perform \Search in an optimal number of memory transfers. However, a short
-coming of B-trees is that they require knowledge of the size of the memory
-blocks, thus it is a cache aware data structure. This gave rise to the notion
-of cache-oblivious algorithms, e.g. data structures that perform well
-regardless of the size of the memory blocks or the number hierarchies. Bender
-et al. introduced the cache-oblivious B-tree which ...
+This paper present a survey on cache-oblivious B-trees (CO B-trees). The CO B-tree
+was first introduce by Bender et al in 2000. It is an external memory data structure meaning
+that it optimizes the number of memory transfers if performs rather than the number of
+CPU instructions that it executions. Unlike other external memory data structure, like
+the widely use B-tree, the CO B-tree does not require any information about the
+number of level in the machine's memory hierarchy, the block size and capacity at each level, or the 
+relative speeds for memory transfer. Hence, the CO B-tree is ``cache-oblivious''.
+Despite this, the CO B-tree is able to achieve the same
+optimal search bound as the B-tree and near optimal insertion and deletion bounds as well.
+In this paper we first describe the original CO B-tree and explain how it is able to achieve 
+its memory performance. We then present and analyze three followup CO B-tree data structures
+ that improved upon shortcoming of the original: the cache-oblivious string B-tree, which introduces support 
+for variable length keys, the cache-oblivious streaming B-tree, which incorporates improvements to the
+insertion bound at the expense of the search bound, and lastly, the cache-oblivious concurrent B-tree, which 
+introduces support for concurrency.
 
 \end{abstract}
 

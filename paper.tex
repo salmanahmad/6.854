@@ -340,7 +340,7 @@ Fist, the PMA needs to maintain open space in its memory for newly inserted
 items. The PMA is able to accomplish this using $O(1 + (log^2 N) / B)$ memory
 transfers. Doing so may seem like attempting to achieve contradictory goals:
 maintaining the locality of elements while keeping space available for new
-inserts. The PMA uses a technique described in \cite{pma}. At a high level, the PMA
+inserts. The PMA uses a technique described in \cite{packedmemoryarray}. At a high level, the PMA
 maintains a windows into the array. When a window becomes too full or too
 empty, the elements are spread out within the context of a larger window. Two
 parameters are required, the window size and the threshold for trigger the

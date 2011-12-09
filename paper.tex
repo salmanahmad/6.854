@@ -120,11 +120,11 @@ Stephen Tu\\
 \maketitle
 \begin{abstract}
 
-This paper present a survey on cache-oblivious B-trees (CO B-trees). The CO
-B-tree was first introduce by Bender et al in 2000. It is an external memory
+This paper presents a survey of cache-oblivious B-trees (CO B-trees). The CO
+B-tree was first introduced by Bender et al. in 2000. It is an external memory
 data structure - meaning that it optimizes the number of memory transfers it
-performs rather than the number of CPU instructions that it executions. Unlike
-other external memory data structures, like the widely use B-tree, the CO
+performs rather than the number of CPU instructions that it executes. Unlike
+other external memory data structures, like the widely used B-tree, the CO
 B-tree does not require any information about the number of level in the
 machine's memory hierarchy, the block size and capacity at each level, or the
 relative speeds at each level. Hence, the CO B-tree is ``cache-oblivious''.
@@ -132,7 +132,7 @@ Despite this, the CO B-tree is able to achieve the same optimal search bound
 as the B-tree and near optimal insertion and deletion bounds as well. In this
 paper we first describe the original CO B-tree and explain how it is able to
 achieve its memory performance. We then present and analyze three followup CO
-B-tree data structures that improved upon shortcoming of the original: the
+B-tree data structures that improve upon weaknesses of the original: the
 cache-oblivious string B-tree, which introduces support for variable length
 keys, the cache-oblivious streaming B-tree, which incorporates improvements to
 the insertion bound at the expense of the search bound, and lastly, the
@@ -146,15 +146,15 @@ cache-oblivious concurrent B-tree, which introduces support for concurrency.
 
 
 Most algorithms assume an idealized model of computation that consists of a
-single CPU, which performs instructions, and memory, which is a flat array
+single CPU and memory as a flat array
 that can be read and written. However, in reality memory is not a flat array
 but rather a hierarchy from super fast on chip caches, to slower main memory,
 to even slower disks. When a program requests data, the data is found in the
 memory hierarchy and typically carried up the hierarchy to the fastest memory
 layer possible, usually a cache. The CPU is then able to access it to perform
 any necessary operations. Unfortunately, this cache often has a small capacity
-and once it is filled any new data requests cause some existing cached data to
-be evicted. Transfering data from lower to higher levels in the memory
+and once it is full any new data requests cause some existing cached data to
+be evicted. Transferring data from lower to higher levels in the memory
 hierarchy often takes a long time. In fact, access times between the different
 layers of the hierarchy can differ by many orders of magnitude and thus the
 time to transfer data often dominates the overall runtime performance of an
@@ -191,7 +191,7 @@ to incur an increasing number of memory transfers if the dominating level in
 the hierarchy changes.
 
 Additionally, the B-tree expects to know the block size of its memory layer in
-advanced. B-Trees are implemented with parameterized code that needs to be
+advance. B-Trees are implemented with parameterized code that needs to be
 changed for every level in the memory hierarchy. Needless to say, this tuning
 can be very difficult and error prone. Additionally, tuning this parameter may
 even be impossible in certain heterogeneous computing environments.
@@ -199,8 +199,8 @@ even be impossible in certain heterogeneous computing environments.
 The shortcomings of the DAM model gave rise to the cache-oblivious (CO) model
 of computation. In the CO model an algorithm has no information about the
 memory hierarchy. It does not know anything about the speed or the block size
-of any level. Conceptually, the CO model allow algorithm designers to reason
-about the simple two-level model like DAM but prove results for any arbitrary
+of any level. Conceptually, the CO model allows algorithm designers to reason
+about the simple two-level model like DAM but also prove results for any arbitrary
 multi-level memory hierarchy. This is because algorithms that perform well in
 a CO model should, in theory, perform well regardless of changes in block
 size, cache capacity, and cache speed. Consequently, CO algorithm should
@@ -280,7 +280,7 @@ weight of a node is $u$ is equal to the total number of $u$'s descendants plus
 1. It can also be thought of as the sum of the weights of $u$'s children plus
 1. Formally, $u$'s weight is: $w(u) = 1 + \sum_{v \in children} w(v)$.
 
-Most weight-balanced search trees which requires that the heights of a node's
+Most weight-balanced search trees require that the heights of a node's
 left and right subtrees are simply off by a constant factor. The SWBST enforces the
 stronger property that a node at height $h$ in the tree (height is the node's
 distance from the leaves; leaves have a height of 1) has $\Theta c^h$
@@ -300,7 +300,7 @@ weight of a node:
 \frac{c^{h-1}}{2} \leq w(u) \leq 2c^{h-1}
 \end{equation}
 
-Lets now consider insertions. To insert an element into a WSBST we search down
+Let us now consider insertions. To insert an element into a WSBST we search down
 the tree and find the natural place to insert the element - just like in any
 tree structure. After inserting the element into some node $w$, we have to
 check to see if any of $w$'s ancestors have become unbalanced by having a
@@ -320,8 +320,8 @@ Deletions are supported in the exact same way, except, we check if a node has
 a weight $w(u) < \frac{c^{h-1}}{2}$. In this case, we will merge two neighbors
 together and proceed up the tree. There is one edge case that needs to be
 handled. After merging, you may produce a new node that has a weight larger
-than the bounds. If this happens we immediately split the node again. Thus,
-this can be thought of as stealing nodes from a neighbor.
+than the bounds. If this happens we immediately split the node again. This can 
+be thought of as stealing nodes from a neighbor.
 
 We have now shown that the SWBST achieves the desired property that the number
 of descendants of a node is $c^h$. We can now show how to lay this tree out in
@@ -336,12 +336,12 @@ mapping this tree to memory and proving that it achieves our desired number of
 memory transfers. The packed memory array (PMA) was developed to solve this
 problem \cite{BenderDemainColton}. There are three main costs that the PMA is concerned with.
 
-Fist, the PMA needs to maintain open space in its memory for newly inserted
+First, the PMA needs to maintain open space in its memory for newly inserted
 items. The PMA is able to accomplish this using $O(1 + (log^2 N) / B)$ memory
 transfers. Doing so may seem like attempting to achieve contradictory goals:
 maintaining the locality of elements while keeping space available for new
 inserts. The PMA uses a technique described in \cite{packedmemoryarray}. At a high level, the PMA
-maintains a windows into the array. When a window becomes too full or too
+maintains windows into the array. When a window becomes too full or too
 empty, the elements are spread out within the context of a larger window. Two
 parameters are required, the window size and the threshold for trigger the
 spreading out. However, these parameters are not related to the block size of
@@ -349,7 +349,7 @@ the memory level and thus do not violate the CO model of computation. Overall,
 the PMA is able to keep extra space in $O(1 + (log^2 N) / B)$ memory
 transfers.
 
-Second, the PMA needs to handle the splitting and merging that will be caused
+Second, the PMA needs to handle the splitting and merging caused
 by the SWBST discussed in the previous section. The PMA is able to accomplish
 this using $O(1 + (log N) /B)$ memory transfers. The proof is based on the
 fact that each node has $c^h$ descendants (recall, this is the key property
@@ -386,7 +386,7 @@ ordinary, cache-aware, B-trees.
 \section{Variable Length Strings}
 
 \subsection{Motivation}
-In order for B-trees to remain versatile, they must be able to accommodate various forms of data. However, traditional B-trees and string B-trees have suboptimal performance when variable length strings are used as keys. In addition, string B-trees do not support compression, and commonly used front compression is handled sub-optimally. Regular B-trees and string B-trees are not cache oblivious, and thus incur poorer performance as described previously in *cite original b-tree paper*. Range queries have poor performance in B-trees. In \cite{BenderFaKu06}, Bender et al. address these issues by designing a Cache Oblivious String B-tree (COSB-tree), which they argue works efficiently in these problem areas for variable length string keys. They also provide a modified front-compression scheme, which gives their approach the advantages of using less space and having improved locality within the compressed data.
+In order for B-trees to remain versatile, they must be able to accommodate various forms of data. However, traditional B-trees and string B-trees have suboptimal performance when variable length strings are used as keys. In addition, string B-trees do not support compression, and commonly used front compression is handled sub-optimally. Regular B-trees and string B-trees are not cache oblivious, and thus incur poorer performance as described previously. Range queries have poor performance in B-trees. In \cite{BenderFaKu06}, Bender et al. address these issues by designing a Cache Oblivious String B-tree (COSB-tree), which they argue works efficiently in these problem areas for variable length string keys. They also provide a modified front-compression scheme, which gives their approach the advantages of using less space and having improved locality within the compressed data.
 
 Two experiments are performed, in which a regular B-tree implementation tuned to various block sizes is compared to a static COSB-tree implementation. The experiment involved measuring the amount of time required to perform: 440,000 and 450,000 inserts of random values, a range query of all values, and 1000 random searches. The results of the experiment show that COSB-trees outperformed B-trees most of the time for random searches, range queries and random inserts. However, some point between 440,000 and 450,000 inserts the COSB-tree had to rebalance the entire tree, causing it to fall behind in this measurement. However, Bender et al. argue that the experiment was biased towards the B-tree implementation, since the trees are "young", and thus still well organized. The COSB-tree implementation is also compared to Berkeley DB **cite berkeley db**, and achieves performance comparable to Berkeley DB with tuned parameters. The results seem to show that there is a window in which large and small-block size B-trees perform poorly, and that COSB-trees may be a reasonable alternative to improve performance.
 \subsection{Description}
@@ -398,23 +398,23 @@ The Dynamic COSB-tree consists of 3 major components: a centroid tree at the top
 
 The centroid tree on a high level behaves similarly for static and dynamic COSB-trees. The leaves of the centroid tree point into the hashdata layer, where a sequential scan is performed to find the correct key by hash value. The hashdata layer points directly into the keydata layer, where the appropriate key is decoded, compared and returned.
 
-In the following subsections, centroid trees are explained, and a summary of how to modify them to preserve weight balance in the dynamic case is provided. Two iterations on forward compression are also summarized to show how to incrementally add support for variable length strings as keys for dynamic COSB-trees. Lastly, the design and use of the hashdata and keydata are explained.
+In the following subsections, centroid trees are explained, and a summary of how to modify them to preserve balance and structure in the dynamic case is provided. Two iterations on forward compression are also summarized to show how to incrementally add support for variable length strings as keys for dynamic COSB-trees.
 
 \subsubsection{The Dictionary Matching Problem and Centroid Trees} %todo:cite dictionary matching problem--sources in cosb-tree paper
-In this approach to solving the dictionary matching problem, a dictionary $D$ of $N$ keys is preprocessed using hashing and divide-and-conquer via the construction of a centroid tree over the keys. This technique forms the basis for the Cache Oblivious String B-tree (COSB-tree) design. Consider the compacted trie $T$ of $D$. Bender et al. observe that there exists a centroid vertex $\rho$ in $T$ such that $\rho$ has between N/3 and 2N/3 descendants, inclusive. When searching for a key $k$ in the compacted trie, you traverse the tree as follows: for each node $y$ that you visit, if $y$ is a prefix of $x$, or $y$ matches $x$, continue on into the trie rooted at $y$ or \emph{down trie} of $y$. Otherwise traverse the trie resulting from excluding $y$ and its subtree. The \emph{centroid tree} is obtained by rooting the tree at \emph{centroid vertex} $\rho$, and making its children recursively defined \emph{centroid trees} of its up and down tries. 
+In this approach to solving the dictionary matching problem *cite dictionary matching problem paper*, a dictionary $D$ of $N$ keys is preprocessed using hashing and divide-and-conquer via the construction of a centroid tree over the keys. This technique forms the basis for the Cache Oblivious String B-tree (COSB-tree) design. Consider the compacted trie $T$ of $D$. Bender et al. observe that there exists a centroid vertex $\rho$ in $T$ such that $\rho$ has between N/3 and 2N/3 descendants, inclusive. When searching for a key $k$ in the compacted trie, you traverse the tree as follows: for each node $y$ that you visit, if $y$ is a prefix of $x$, or $y$ matches $x$, continue on into the trie rooted at $y$ or \emph{down trie} of $y$. Otherwise traverse the trie resulting from excluding $y$ and its subtree. The \emph{centroid tree} is obtained by rooting the tree at \emph{centroid vertex} $\rho$, and making its children recursively defined centroid trees of its up and down tries. 
 
-At each step through the centroid tree, a consistent fraction of the nodes are eliminated from the search, resulting in an $O(logN)$ time bound when ignoring the time required to operate on keys. To make key comparisons faster, the keys are hashed and hash values are compared in place of the original key values. To avoid mismatches due to overlap in hash values, the original key values are compared after finding a match in hash values. The resulting time bound for \Search{} (interchangeable with \Member{}) is $O(||k||+logN)$. If each node in the centroid tree knows its successor and predecessor descendants, \Pred{} and \Succ{} can be achieved in $O(||k||+||k'||+logN)$, where $k'$ is the successor or predecessor of $k$. Note that the additive $logN$ incurred by the use of centroid trees can be avoided when using main memory. Centroid trees are used to capitalize on locality for the cache oblivious string B-tree design, described later in this section.
+At each step through the centroid tree, a consistent fraction of the nodes are eliminated from the search, resulting in an $O(logN)$ time bound when ignoring the time required to operate on keys. To make key comparisons faster, the keys are hashed and hash values are compared in place of the original key values. To avoid mismatches due to overlap in hash values, the original key values are compared after finding a match in hash values. The resulting time bound for \Search{} (interchangeable with \Member{}) is $O(||k||+\log{}N)$. If each node in the centroid tree knows its successor and predecessor descendants, \Pred{} and \Succ{} can be achieved in $O(||k||+||k'||+logN)$, where $k'$ is the successor or predecessor of $k$. Note that the additive $logN$ incurred by the use of centroid trees can be avoided when using main memory. Centroid trees are used to capitalize on locality for the cache oblivious string B-tree design, described later in this section.
 
-The centroid tree is built using $O(N/logN)$ keys, and the centroid tree is layed out in memory using a modified van Emde Boas (vEB) layout for weight-balanced binary trees. The \emph{hyperhyperfloors} of nodes are used as a guide for cutting the tree into equal-size subtrees for the vEB layout. The \emph{hyperhyperfloor} of x is denoted as $\lhyperfloor{}x\rhyperfloor{}$, and refers to rounding x down to the nearest power of a power of 2. This ensures trees of equal size on all \emph{levels of detail}, as the centroid tree is traversed.
+The centroid tree is built using $O(N/\log{}N)$ keys, and the centroid tree is layed out in memory using a modified van Emde Boas (vEB) layout for weight-balanced binary trees. The \emph{hyperhyperfloors} of nodes are used as a guide for cutting the tree into equal-size subtrees for the vEB layout. The \emph{hyperhyperfloor} of x is denoted as $\lhyperfloor{}x\rhyperfloor{}$, and refers to rounding x down to the nearest power of a power of 2. This ensures trees of equal size on all \emph{levels of detail}, as the centroid tree is traversed.
 
 The following approach is used to rebalance the centroid tree: Put all the elements in DFS or Euler tour order for the trie. Given this order, scan the trie to identify the centroid vertex, partition the trie into its respective up and down tries, and recurse on the up and down tries. The Euler tour order can be achieved via $O(\log{}N)$ scans, since the trie is only $O(\log{}N)$ deep. Thus updates have amortized cost of $O(1+\log^{2}N/B)$ memory transfers. Note that this doesn't include updating successor or predecessor pointers, which is described in more detail below.
 
-The following approach is used for maintaining the vEB layout for centroid trees in the dynamic COSB-tree: first, weight balance is relaxed from a maximum weight difference of 2 between left and right subtrees, to a larger constant $c$. Thus a node $v$ only becomes out of balance every $\Omega(\textsc{weight(v)})$ insertions or deletions of descendants of v, reducing the frequency of rebuilds. The nodes are stored in a PMA structure, preserving order of the nodes using $\Theta(N)$space, apart from inserts and deletes. On insert or delete, the structure is scanned in both directions starting from the update point for sections of the array to rebalance based on a "density" threshold of the section. Rebalance here refers to evenly distributing the nodes across the section. To ensure that updating pointers isn't too expensive, any node included in the section must have its subtrees included. Specifically, the section is built up from the the lowest subtree level that contains or contained the update point, and neighboring subtrees are continuously added until either the density threshold is met or the entire current subtree layout at this "level of detail" is included. For example, suppose a node is inserted at the leaf of some lower recursive subtree $L_{i}$. To continue building up this section, $L_{i-1}$ or $L_{i+1}$ could be added. If all the lower recursive subtrees $L_{1}$,$L_{2}$,...,$L_{x}$ have been added, the top level tree $U$ is added. This corresponds to a subtree $L'_{j}$ one level above. Thus repeat this process until the density threshold is met, and then rebalance the tree. This approach depends on the fact that all the recursive subtrees at the same level of detail asymptotically have the same size, which Bender et al. prove about the hyperhyperfloor-based vEB layout described previously. This approach results in an amortized update cost of $O(1+(\log{}N)/B)$ memory transfers per update. In conjunction with the cost of rebuilds described above, this is only an additive $O(\log{}N/B)$ factor, so the overall bound is amortized $O(1+\log^{2}N/B)$ memory transfers.
+The following approach is used for maintaining the vEB layout for centroid trees in the dynamic COSB-tree: first, weight balance is relaxed from a maximum weight difference of 2 between left and right subtrees, to a larger constant $c$. Thus a node $v$ only becomes out of balance every $\Omega(\textsc{weight(v)})$ insertions or deletions of descendants of v, reducing the frequency of rebuilds. The nodes are stored in a PMA structure, preserving order of the nodes using $\Theta(N)$space, apart from inserts and deletes. On insert or delete, the structure is scanned in both directions starting from the update point for sections of the array to rearrange based on a "density" threshold of the section. Rearranging here refers to evenly distributing the nodes across the section to make room for more nodes. To ensure that updating pointers isn't too expensive, any node included in the section must have its subtrees included. Specifically, the section is built up from the the lowest subtree level that contains or contained the update point, and neighboring subtrees are continuously added until either the density threshold is met or the entire current subtree layout at this "level of detail" is included. For example, suppose a node is inserted at the leaf of some lower recursive subtree $L_{i}$. To continue building up this section, $L_{i-1}$ or $L_{i+1}$ could be added. If all the lower recursive subtrees $L_{1}$,$L_{2}$,...,$L_{x}$ have been added, the top level tree $U$ is added. This corresponds to a subtree $L'_{j}$ one level above. Thus repeat this process until the density threshold is met, and then rebalance the tree. This approach depends on the fact that all the recursive subtrees at the same level of detail asymptotically have the same size, which Bender et al. prove about the hyperhyperfloor-based vEB layout described previously. This approach results in an amortized update cost of $O(1+(\log{}N)/B)$ memory transfers per update. In conjunction with the cost of rebuilds described above, this is only an additive $O(\log{}N/B)$ factor, so the overall bound is amortized $O(1+\log^{2}N/B)$ memory transfers.
 
-Note that making the COSB-trees dynamic causes updates to successor and predecessor pointers in the centroid tree to be expensive. Thus the notion of ancestors is relaxed to the following (Lemma 10 in \cite{BenderFaKu06}): Let $\alpha$ be the parent node of $\gamma$ in the compressed trie. Then either $\alpha$ is a descendant of $\gamma$ or $\gamma$ is a descendant of $\alpha$. The proof is as follows: As you recursively traverse the trie, both $\alpha$ and $\gamma$ are in the up trie or down trie, until at some point one of them must be the centroid vertex. This is used to redefine what the predecessor/ancestor pointers refer to. The centroid may no loner point to the correct predecessor or successor with respect to the relevant subtrie, but one of the matched ancestors by construction must point to the correct predecessor/successor. Thus for the dynamic case, when dealing with successors and predecessors, $O(logN)$ ancestors' successor and predecessor pointers in addition to the successor and predecessor pointers of the node in question must be checked. However, this is an additive factor, so the same time bound for update described above is still achieved.
+Note that making the COSB-trees dynamic causes updates to successor and predecessor pointers in the centroid tree to be expensive. Thus the notion of ancestors is relaxed to the following (Lemma 10 in \cite{BenderFaKu06}): Let $\alpha$ be the parent node of $\gamma$ in the compressed trie. Then either $\alpha$ is a descendant of $\gamma$ or $\gamma$ is a descendant of $\alpha$. The proof is as follows: As you recursively traverse the trie, both $\alpha$ and $\gamma$ are in the up trie or down trie, until at some point one of them must be the centroid vertex. This is used to redefine what the predecessor successor pointers refer to. The centroid may no loner point to the correct predecessor or successor with respect to the relevant subtrie, but one of the matched ancestors by construction must point to the correct predecessor or successor. Thus for the dynamic case, when dealing with successors and predecessors, $O(logN)$ ancestors' successor and predecessor pointers in addition to the successor and predecessor pointers of the node in question must be checked. However, this is an additive factor, so the same time bound for update described above is still achieved.
 
 \subsubsection{Modifying Front Compression to Preserve Locality}
-This section provides a brief summary of how front compression is modified to optimize compression and decoding for static and dynamic cache-oblivious string B-trees. Consider a sequence of $j$ keys to store $k_{1}$,  $k_{2}$, ...,  $k_{j}$. Without compression, this requires $\sum_{j}||k_{j}||$ space in memory. To compress these keys using front compression, let $\pi_{j}$ be the longest common prefix between $k_{j}$ and $k_{j+1}$. Now instead we store the keys as follows: 
+This section provides a brief summary of how front compression is modified to optimize compression and decoding for static and dynamic cache-oblivious string B-trees. Consider a sequence of $j$ keys to store $k_{1}$,  $k_{2}$, ...,  $k_{j}$. Without compression, this requires $\sum_{j}||k_{j}||$ space in memory. To compress these keys using front compression, let $\pi_{j}$ be the longest common prefix between $k_{j}$ and $k_{j+1}$. Now instead we store the keys in the following format:  
 \begin{center}
 $k_{1}$,$||\pi_{2}||$,$\sigma_{2}$,$||\pi_{3}||$$\sigma_{3}$,...,$||\pi_{j}||$,$\sigma_{j}$
 \end{center}
@@ -443,14 +443,14 @@ The operations supported are dictated by the Dictionary Matching problem. These 
 
 \subsection{Description}
 
-While B-trees achieve an optimal bound for the number of memory transfer for
+While B-trees achieve an optimal bound for the number of memory transfers for
 search, they do not perform as well for updates and insertions. The
 buffered-repository tree (BRT) is a common alternative to the B-tree that
 achieves an improved amortized $O(log(N)/B)$ memory transfers for inserts
 compared to the $O(log_{B+1}N)$ memory access of B-trees. Of course, the
 B-tree and BRT are analyzed with the DMA model and are not cache-oblivious.
 
-This search vs insertion trade off also exists in the cache-oblivious model.
+This search vs insertion trade-off also exists in the cache-oblivious model.
 The original BO B-tree described in Section~\ref{sec:original} is designed to
 optimize for the search in this trade off. However, Bender et al. propose two
 data structures that and achieve the opposite end: the shuttle tree and the

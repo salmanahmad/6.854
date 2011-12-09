@@ -411,15 +411,16 @@ The operations supported are
 
 \subsection{Description}
 
-While B-trees achieve good performance for searches, they do not perform as
-well for updates and insertions. The buffered-repository tree (BRT) is a
-common alternative to the B-tree achieves an improved amortized $O(log(N)/B)$
-memory transfers for inserts compared to the $O(log_{B+1}N)$ memory access of
-B-trees.
+While B-trees achieve an optimal bound for the number of memory transfer for
+search, they do not perform as well for updates and insertions. The
+buffered-repository tree (BRT) is a common alternative to the B-tree that
+achieves an improved amortized $O(log(N)/B)$ memory transfers for inserts
+compared to the $O(log_{B+1}N)$ memory access of B-trees. Of course, the
+B-tree and BRT are analyzed with the DMA model and are not cache-oblivious.
 
-The search vs insertion trade off also exists in the cache-oblivious model.
-The original cache-oblivious B-trees described in Section~\ref{sec:original}
-achieves the search end of this trade off. However, Bender et al. propose two
+This search vs insertion trade off also exists in the cache-oblivious model.
+The original BO B-tree described in Section~\ref{sec:original} is designed to
+optimize for the search in this trade off. However, Bender et al. propose two
 data structures that and achieve the opposite end: the shuttle tree and the
 cache-oblivious lookahead array (COLA) \cite{BenderFaFi07}. These two data
 structures are refereed to as ``streaming B-trees'', indicating how they are
@@ -429,14 +430,15 @@ optimized for insertions at the cost of search.
 
 The shuttle tree is similar in layout and structure as the original CO B-Tree.
 It uses a strongly weight-balanced search tree described previously (see
-Section~\ref{sec:structure}) that is laid out in a vEB layout into a PMA. A
-notable difference is that the CO B-tree splits the tree at height $h/2$ when
-creating the vEB layout while the shuttle tree splits at height $F_k$ where
-$F_k$ is the $kth$ Fibonacci number that is stickily less than the height of
-the tree. Thus if a tree's height happens to be a Fibonacci number, $F_k$,
-then the shuttle tree will choose to split the tree at height $F_{k-1}$. The
-top and bottom ``halves'' produced by this split are organized just like
-before and shown in Figure \ref{fig:veb}.
+Section~\ref{sec:structure}) that is laid out in a vEB (see
+Section~\ref{sec:veb}) layout into a PMA (see Section~\ref{sec:layout}). A
+notable difference between the shuttle tree and the CO B-tree is that the CO
+B-tree splits the tree at height $h/2$ when creating the vEB layout while the
+shuttle tree splits at height $F_k$, where $F_k$ is the $kth$ Fibonacci number
+that is stickily less than the height of the tree. Thus if a tree's height
+happens to be a Fibonacci number, $F_k$, then the shuttle tree will choose to
+split the tree at height $F_{k-1}$. The top and bottom ``halves'' produced by
+this split are organized just like before and shown in Figure \ref{fig:veb}.
 
 \begin{figure}
 
@@ -449,74 +451,83 @@ before and shown in Figure \ref{fig:veb}.
 \end{figure}
 
 
-The shuttle tree improves the efficiency of insertion by adding buffers to
-each node in the tree. In fact, shuttle tree nodes have a linked list of
-buffers rather than a single buffer like BRT and each of these buffers is
-another shuttle tree. The length of a node's linked list is related to the
-node's height in the tree. A node has a buffer for every time it the leaf of a
-sub trees that is split when creating the vEB layout. This idea is illustrated
-in Figure \ref{fig:buffers}.
+At a high level, the shuttle tree improves the efficiency of insertion by
+adding buffers to each node in the tree. In fact, shuttle tree nodes have a
+linked list of buffers rather than just a single buffer like the BRT. Each of
+these buffers is another shuttle tree. The a shuttle tree node enforces two
+constraints: the length of its linked list as well as the overall height (and
+thus capacity) of each of the buffered shuttle trees contained within its
+linked list.
+
+The length of a node's linked list is related to the node's height in the
+tree. A node has a buffer for every time it the leaf of a sub trees that is
+split when creating the vEB layout. This idea is illustrated in Figure
+\ref{fig:buffers}.
 
 The shuttle tree's node's buffers have a maximum capacity that is enforced by
-bounding it height. The size of the buffers increases going across the linked
+bounding its height. The size of the buffers increases going across the linked
 list. Thus, a node's first buffer is smaller than its last buffer. The maximum
 height of a buffer is given by $F_{H(k)} = F_{k-2 \lceil log_{\phi} k \rceil}
 $ where $\phi$ is the golden ratio and $k$ is chosen such that $F_k$ =
 $\xi(h)$ and $\xi(x)$ is defined recursively. If $h$ is a Fibonacci number
 then $\xi(h) = h$ and otherwise $\xi(h) = \xi(h-f)$ where f is the largest
-Fibonacci number less than $h$. The size of the buffer is related to the size
-of the recursive subtree for which the node is a leaf. Since the recursive
-subtrees are split based on the largest Fibonacci number less than $h$ it
-follows that the buffer sizes are also based on Fibonacci numbers.
+Fibonacci number less than $h$. The maximum height of an individual buffer is
+related to the size of the recursive subtree for which the node is a leaf.
+Since the recursive subtrees are split based on the largest Fibonacci number
+less than $h$ (as described previously) it follows that the buffer sizes are
+also based on Fibonacci numbers.
 
 \subsubsection{Operators}
 
 The operations that are described by Bender et al. for the shuttle tree are
-\Search, \Insert, and \Scan. An explicit discussion on \Delete is missing;
-however, it is assumed that it is symmetric to \Insert.
+\Search{}, \Insert{}, and \Scan{}. An explicit discussion on \Delete{} is
+missing; however, it is assumed that it is symmetric to \Insert{}.
 
-\Search and \Scan work virtually the same way as the CO B-tree. The only
+\Search{} and \Scan{} work virtually the same way as the CO B-tree. The only
 difference is that you have to search a child node's buffer before following
 the pointer down the tree.
 
-\Insert is also similar to the CO B-tree except you buffer elements as you add
-new elments. When you insert an element you move down the tree from the root
-to leaves and stop when you find a node that has a buffer (it is possible that
-a node does not have any buffers because of the height of the tree). You then
-attempt to insert the element into the smallest buffer in the node's linked
-list. If this insertion causes the buffer to overflow (e.g. the height of the
-buffer exceeds its maximum), you move all of the elements from this buffer to
-the next largest buffer. When the largest buffer overflows you take all of its
-elements and ``shuttle'' them down the tree. Eventually you will hit a leaf
-node and inserting here may cause the balance constraints on the SWBST to
-become invalidated. The shuttle tree rebalances itself just like any other
-SWBST: the leaf node is split into two and this cascades up the tree until
-balance is restored.
+\Insert{} is also similar to the CO B-tree except you buffer elements as you
+add them. When you insert an element you move down the tree from the root to
+leaves and stop when you find a node that has a buffer (note that because of
+the nature of Fibonacci numbers that it is possible that a node does not have
+any buffers). You then attempt to insert the element into the smallest buffer
+in the node's linked list. If this insertion causes the buffer to overflow
+(e.g. the height of the buffer exceeds its maximum), you move all of the
+elements from this buffer to the next largest buffer. When the largest buffer
+overflows you take all of its elements and ``shuttle'' them down the tree.
+Eventually you will hit a leaf node and inserting here may cause the balance
+constraints on the SWBST to become invalidated. The shuttle tree rebalances
+itself just like any other SWBST: the leaf node is split into two and this
+split cascades up the tree until balance is restored.
 
-When a node $u$ is split into two nodes $u1$ and $u2$ we immediately allocate
-enough space for all of the $u2$'s buffers. We then scan over $u$'s buffered
-sub trees and find the ones rooted in $u1$ and $u2$ and move them
-respectively. This can be achieved by a single scan. Once we have found the
-set of subtrees that correspond to $u1$ and $u2$ we replace the original sub
-trees for $u$ in the vEB layout.
+The shuttle tree also needs to take care of the buffers belonging to a split
+node. When a node $u$ is split into two nodes $u_1$ and $u_2$ the shuttle tree
+immediately allocates enough space for all of the $u_2$'s buffers ($u_1$
+simply reuses the space allocated for $u$'s buffers). We then scan over $u$'s
+buffers and find the ones rooted in $u_1$ and $u_2$ and move them
+respectively. This can be achieved by a single scan.
 
-The core problem of maintain room for inserts in the shuttle tree does not
-change from the CO B-tree and is handled by the PMA just like in described in
-Section~\ref{sec:layout}.
+The core problem of maintaining room for inserts, bounding the costs of
+merging and splitting, and bounding the costs of updating parent and child
+pointers in the shuttle tree is achieved using the same PMA used with the CO
+B-tree. This is decried in detail in Section~\ref{sec:layout}.
 
 \subsubsection{Complexity}
 
-The complexity of \Search is $O(log_B N)$ where $N = \Theta(c^{F_k})$ and $c$
+\Search uses $O(log_B N)$ memory transfers where $N = \Theta(c^{F_k})$ and $c$
 is your fanout. Note that $c$ is not treated as a constant since this is a
 cache-oblivious data structure. This bound is achieved by searching over the
-top and bottom recursive subtrees at each level. A key trick is that when you
-visit a node you only search its largest buffer (that last buffer in the
-linked list). The smaller buffers will be visited eventually as you recurse
-down the tree. Eventually you will get down to a single subtree that can fit
-into $O(1)$ blocks and thus can be search with $O(1)$ memory accesses. Since
-the fanout is proportional to our block size it will take us $O(log_B N)$
-block accesses until we get down to a subtree and thus, by induction, the
-worst case runtime is $O(log_B N)$.
+top and bottom recursive subtrees at each level when traversing the tree. A
+key trick is that when you visit a node you only search its largest buffer
+(that last buffer in the linked list for that level). The smaller buffers will
+be visited eventually as you recurse down the tree. Eventually you will get
+down to a single subtree that can fit into $O(1)$ blocks and thus can be
+searched with $O(1)$ memory accesses. Since the fanout is proportional to our
+block size it will take us $O(log_B N)$ block accesses until we get down to a
+subtree and thus, by induction, the worst case runtime is $O(log_B N)$.
+
+***** 
 
 \Insert uses $O(log_{B+1} N / B^{\Theta(1/(loglogB)^2)} + (log^2 N) / B)$
 memory transfers. This improvement of the the CO B-tree is achieved because
@@ -530,96 +541,108 @@ buffer down the tree, not just the single one that caused the overflow. Thus,
 we amortize the cost of a single insert by the number of elements in a node's
 largest buffer.
 
-The complexity to \Scan $L$ elements is amortized to $O(L/B)$ memory
-transfers. First you perform a \Search to get to the starting element of your
-range. Once you have a block in memory you can start scanning in elements and
-since you only have to read a new block every $B$ accesses each element access
-is amortized to $1/B$ and thus overall the number of memory access is
-$O(L/B)$. This, of course, assumes that you just performed a search for the
-starting point of your scan.
+******
 
-The last thing that should be considered is the space requirement of the
-shuttle tree. However, the overall space requirements of the shuttle tree is
-actually just $O(n)$. The high level intuition for this proof is that the
-majority of the buffers are really small and thus do not impact the overall
-size of the tree.
+\Scan{} uses an amortized $O(L/B)$ memory transfers to scan in $L$ consecutive
+elements. This cost obviously does not include the single \Search{} operation
+that is required to find the first starting element of the range. Once that
+first element's block is transferred, the shuttle tree proceeds by traversing
+the tree and scanning in elements. Since the vEB layout enforces the spatial
+locality of nearby nodes in the tree, the shuttle tree only has to read in a
+new block once every $B$ memory accesses. Thus, each individual memory access
+is is amortized to $1/B$ and the overall number of memory transfers is
+$O(L/B)$.
+
+The last thing that is worth mentioning is that the overall space requirements
+of the shuttle tree is $O(n)$. The high level intuition for this proof is that
+the majority of the buffers are really small and thus do not impact the
+overall size of the tree.
 
 \subsection{COLA}
 
-The cache-oblivious lookahead array (COLA) is a cache-oblivious dictionary
-that is actually quite different from the other cache-oblivious data
-structures seen so far. Instead of an explicit tree structure with child and
-parent pointers, the COLA is organized as a list of arrays or levels. Each
-level has arrays of size $2^k$. Each level is either completely full or
-completely empty. As such, the COLA is very similar to the binomial list
-structure described in \cite{BentleySaxe}.
+The cache-oblivious lookahead array (COLA) is actually quite different from
+the other cache-oblivious data structures seen so far. Instead of an explicit
+tree structure with child and parent pointers, the COLA is organized as a list
+of arrays or levels. Each array has size $2^k$. Furthermore, each array is
+either completely full or completely empty. As such, the COLA is very similar
+to the binomial list structure described in \cite{BentleySaxe}.
 
 \subsubsection{Operators}
 
-The operations supported by COLA are \Search, \Insert, and \Scan.
+The operations supported by COLA are \Search{}, \Insert{}, and \Scan{}. Once
+again, \Delete{} can be inferred symmetrically from \Insert{}.
 
-\Insert works by initially inserting the element into the first-level array.
+\Insert{} works by initially inserting an element into the first-level array.
 This array has size $2^0 = 1$, thus the element is in an array on it own.
-Whenever you insert an element you check to see if there is another list of
-the same size and merge them together in sorted order. This merging will
-produce a new array of twice the size which goes into the next level. We
-continue to merge until there are no two arrays of the same length.
+Whenever you insert an element you check to see if there is another array of
+the same size (this can be though of as checking to see if there is another
+array in the same level). If there is another array with the same size, the
+COLA merges the two together in sorted order. This merging will produce a new
+array that is twice the size and thus goes into the next level. The COLA
+continues to merge until there are no two arrays of the same size.
 
-\Search can naively be performed by simply scanning each of the levels in our
-data structure. Since everything is sorted we can use a binary search to
-quickly find the element we are looking for. Obviously this is not very
-efficient, thus COLA, as the name suggest, uses look ahead pointers to reduce
-the number of memory accesses required. Every 8th element from the $k+1$ level
-exists in the $k$ level array in its proper sorted location. This element also
-contains a pointer to its real location in the $k+1$ level, thus it is
-referred to as a ``real lookahead pointer''. Additionally, each every 4th cell
-in $k$ level array contains two pointers pointing to the next and previous
-``real lookahead pointers'' on this level. Therefore, to search a level we
-perform a binary search and automatically cascade up to the next level.
+\Search{} can naively be performed by simply scanning each of the levels in
+the COLA. Since everything is sorted the COLA could can use a binary search to
+quickly find the element it is looking for. However, this is not very
+efficient. As an improvement COLA, as the name suggest, uses look ahead
+pointers to reduce the number of memory accesses required. Every 8th element
+from the $(k+1)$st level exists in the $k$ level array in its proper sorted
+location. This element also contains a pointer to its real location in the
+$(k+1)$st level. Thus this pointer is referred to as ``real lookahead
+pointer''. Additionally, each every 4th cell in $k$th level array contains two
+pointers pointing to the next and previous ``real lookahead pointers'' on this
+level. The next and previous pointers are referred to as ``duplicate lookahead
+pointers''. To search a level the COLA performs a binary search within an
+appropriate range, determine the range in the next level using the ``duplicate
+lookahead pointers'' and then recursively cascade up the tree.
 
 \subsubsection{Complexity}
 
-The complexity of \Insert is amortized to $O(log N / B)$ block transfers.
-First, it is important to know that an element will never be merged more than
-$O(log(N))$ times since at that point, it will be in the last array. The first
-$log(B)$ merges that a element participates is constant time since we can
-assume that the relevant blocks are already in memory. Thus, we only need to
-worry about memory accesses when we merge levels that have size greater than
-$B$. If the size of the array is $k$ then the cost of merging is $O(k/B)$ and
-thus the amortized cost of a merging a single element is simply $1/B$. Since
-an element will only be merged $log(N)$ time, the overall cost is amortized to
-$O(logN/B)$.
+\Insert{} achieves an amortized $O(log N / B)$ memory transfers. The proof is
+based on the far that an element will never be merged more than $O(log(N))$
+times. This is because at that point it will be in the last array.
+Additionally, the first $log(B)$ merges that a element participates in uses a
+constant number of memory transfer since we can assume that the relevant
+blocks are already cached. Thus, we only need to worry about memory transfers
+when we merge levels that have size greater than $B$. If the size of the array
+is $k$ then the cost of merging is $O(k/B)$ and thus the amortized cost of a
+merging a single element is simply $1/B$. Since we just proved that an element
+will only be merged $O(log(N))$ time, it follows that the overall amortized
+memory transfers to insert an element is $O((log N)/B)$.
 
-The complexity of \Search is $O(log N)$ memory transfers. The proof is based
-on the fact that we only ever need to search at most eight items on each
-level. Since there are $O(log(N))$ levels and since eight is a constant it
-follows that overall, search accesses $O(log N)$ blocks. A proof by induction
-shows that only eight items need to be searched on each level. The base case
-is trivial. The first three levels of the COLA each have at most eight
-elements that either contain the actual elements or a look ahead pointer to
-the next level. Obviously we can search these levels with no more than eight
-member transfers. As we follow the lookahead pointers to the high levels we
-will eventual get to a level where $k \geq 3$. Note that we do not enter this
-level at the start; rather, we arrived here by following the real lookahead
-pointers from the levels below and are at some index $i$ that contains an
-element $e_i$ such that $e_i < e$ where $e$ is the element we are looking for.
-Our goal is to find a new $i$ such that $e_i \leq e < e_{i+1}$. Once we find
-this $i$ then we can use the duplicate look ahead pointer to find the ``next''
-and previous look ahead pointers in the next level and restrict our search to
-that range. Since we have a real look ahead pointer for every eighth element
-in the next level, it follow that when we get to the next level, we only need
-to search eight elements. Furthermore, since we arrived at our current level
-from a lower level, we only need to search $8$ elements to find this $i$.
-Thus, overall, we only need to perform $O(8log(N)) = O(log(N))$ memory
+\Search{} achieves $O(log N)$ memory transfers. The proof uses induction to
+show that the COLA never needs to search more than eight elements on each
+level. Since there are $O(log(N))$ levels and since eight is a constant, it
+follows that overall, search uses $O(log N)$ memory transfers. The fact that
+only eight elements need to be search per level is shown through induction.
+The base case is trivial. The first three levels of the COLA each have at most
+eight elements (note that these elements are either actual real elements or
+lookahead pointers). The COLA can obviously search these levels with no more
+than eight member transfers. As the COLA follows lookahead pointers to the
+higher levels, it will eventual get to a level where $k \geq 3$. Note that the
+COLA does not ``enter'' this level at the start of the array; rather, its
+arrived here by following the real lookahead pointers from the levels below
+and thus is at some index $i$ that contains an element $e_i$ such that $e_i <
+e$ and $e$ is the element being searched for. The goal at this point is to
+find a new $i$ such that $e_i \leq e < e_{i+1}$. Once this $i$ is found the
+duplicate lookahead pointers can be used to locate the ``next'' and
+``previous'' real lookahead pointers in the next level. The two real lookahead
+pointers are used to and restrict the search in the next level. Recall that at
+each level in the COLA every eighth element in a level is present in the
+previous level. Thus, it follows that in next level only 8 elements need to be
+searched. Furthermore, since the current level was reach from a lower level,
+it follows that only 8 elements need to be search on this level to find the
+appropriate $i$. Thus, overall, the COLA uses $O(8log(N)) = O(log(N))$ memory
 transfers.
 
 \subsubsection{Performance}
 
-In experimental results, COLA achieved significant improvements for random
-inserts, performing 790 times faster than a normal B-tree. Sorted inserts are
-3.1 times slower and searches are 3.5 times slower. These experimental results
-indicate that the the COLA is a suitable data structure for streaming data
-structure where random insertions are common.
+In experimental results, the COLA achieved significant improvements over
+normal (cache-aware) B-trees, performing 790 times faster. However this
+improvement comes at the cost of sorted inserts and normal searches. Sorted
+inserts are 3.1 times slower and searches are 3.5 times slower. Nevertheless,
+these experimental results indicate that the the COLA is a suitable data
+structure when random insertions are common.
 
 \section{Concurrency}
 

@@ -34,7 +34,7 @@
 
 \begin{document}
 
-\title{Cache Oblivious B-trees}
+\title{Survey of Cache Oblivious B-trees}
 %
 % You need the command \numberofauthors to handle the 'placement
 % and alignment' of the authors beneath the title.
@@ -614,21 +614,21 @@ again, \Delete{} can be inferred symmetrically from \Insert{}.
 \Insert{} works by initially inserting an element into the first-level array.
 This array has size $2^0 = 1$, thus the element is in an array on it own.
 Whenever you insert an element you check to see if there is another array of
-the same size (this can be though of as checking to see if there is another
+the same size (this can be thought of as checking to see if there is another
 array in the same level). If there is another array with the same size, the
 COLA merges the two together in sorted order. This merging will produce a new
 array that is twice the size and thus goes into the next level. The COLA
 continues to merge until there are no two arrays of the same size.
 
 \Search{} can naively be performed by simply scanning each of the levels in
-the COLA. Since everything is sorted the COLA could can use a binary search to
+the COLA. Since everything is sorted the COLA can use a binary search to
 quickly find the element it is looking for. However, this is not very
-efficient. As an improvement COLA, as the name suggest, uses look ahead
+efficient. As an improvement COLA, as the name suggests, uses look ahead
 pointers to reduce the number of memory accesses required. Every 8th element
 from the $(k+1)$st level exists in the $k$ level array in its proper sorted
 location. This element also contains a pointer to its real location in the
 $(k+1)$st level. Thus this pointer is referred to as ``real lookahead
-pointer''. Additionally, each every 4th cell in $k$th level array contains two
+pointer''. Additionally, every 4th cell in $k$th level array contains two
 pointers pointing to the next and previous ``real lookahead pointers'' on this
 level. The next and previous pointers are referred to as ``duplicate lookahead
 pointers''. To search a level the COLA performs a binary search within an
@@ -638,10 +638,10 @@ lookahead pointers'' and then recursively cascade up the tree.
 \subsubsection{Complexity}
 
 \Insert{} achieves an amortized $O(log N / B)$ memory transfers. The proof is
-based on the far that an element will never be merged more than $O(log(N))$
+based on the fact that an element will never be merged more than $O(log(N))$
 times. This is because at that point it will be in the last array.
 Additionally, the first $log(B)$ merges that a element participates in uses a
-constant number of memory transfer since we can assume that the relevant
+constant number of memory transfers since we can assume that the relevant
 blocks are already cached. Thus, we only need to worry about memory transfers
 when we merge levels that have size greater than $B$. If the size of the array
 is $k$ then the cost of merging is $O(k/B)$ and thus the amortized cost of a
@@ -653,12 +653,12 @@ memory transfers to insert an element is $O((log N)/B)$.
 show that the COLA never needs to search more than eight elements on each
 level. Since there are $O(log(N))$ levels and since eight is a constant, it
 follows that overall, search uses $O(log N)$ memory transfers. The fact that
-only eight elements need to be search per level is shown through induction.
+only eight elements need to be searched per level is shown through induction.
 The base case is trivial. The first three levels of the COLA each have at most
 eight elements (note that these elements are either actual real elements or
 lookahead pointers). The COLA can obviously search these levels with no more
 than eight member transfers. As the COLA follows lookahead pointers to the
-higher levels, it will eventual get to a level where $k \geq 3$. Note that the
+higher levels, it will eventually get to a level where $k \geq 3$. Note that the
 COLA does not ``enter'' this level at the start of the array; rather, its
 arrived here by following the real lookahead pointers from the levels below
 and thus is at some index $i$ that contains an element $e_i$ such that $e_i <
@@ -668,9 +668,9 @@ duplicate lookahead pointers can be used to locate the ``next'' and
 ``previous'' real lookahead pointers in the next level. The two real lookahead
 pointers are used to and restrict the search in the next level. Recall that at
 each level in the COLA every eighth element in a level is present in the
-previous level. Thus, it follows that in next level only 8 elements need to be
+previous level. Thus, it follows that in the next level only 8 elements need to be
 searched. Furthermore, since the current level was reach from a lower level,
-it follows that only 8 elements need to be search on this level to find the
+it follows that only 8 elements need to be searched on this level to find the
 appropriate $i$. Thus, overall, the COLA uses $O(8log(N)) = O(log(N))$ memory
 transfers.
 
@@ -887,12 +887,12 @@ fails, then this means concurrent modification had occurred, in which case the
 algorithm restarts from the beginning.
 
 \section{Conclusion}
-
+Fill this in.
 %\end{document}  % This is where a 'short' article might terminate
 
 %ACKNOWLEDGMENTS are optional
 \section{Acknowledgments}
-Thanks Karger
+Fill this in.
 
 %
 % The following two commands are all you need in the

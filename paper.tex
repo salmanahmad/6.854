@@ -117,17 +117,18 @@ Stephen Tu\\
 \maketitle
 \begin{abstract}
 
-This paper presents a survey of cache-oblivious B-tree data structures. Memory hierarchies . 
-Since memory transfers often dominate the runtimes of an algorithm it makes sense to
-develop data structure that are optimized not in terms of the number of instructions it executes; but rather, 
-by the number of memory accesses and transfers it has to perform. Among these so called ``external-memory'' data structures,
-the B-tree is widely used as it is able to perform \Search in an optimal number of memory transfers. 
-However, a short coming of B-trees is that they require knowledge of the size of the memory blocks, thus 
-it is a cache aware data structure. This gave rise to the notion of cache-oblivious algorithms, e.g. data structures
-that perform well regardless of the size of the memory blocks or the number hierarchies. Bender et al. 
-introduced the cache-oblivious B-tree which ...
-
-Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+This paper presents a survey of cache-oblivious B-tree data structures. Memory
+hierarchies . Since memory transfers often dominate the runtimes of an
+algorithm it makes sense to develop data structure that are optimized not in
+terms of the number of instructions it executes; but rather, by the number of
+memory accesses and transfers it has to perform. Among these so called
+``external-memory'' data structures, the B-tree is widely used as it is able
+to perform \Search in an optimal number of memory transfers. However, a short
+coming of B-trees is that they require knowledge of the size of the memory
+blocks, thus it is a cache aware data structure. This gave rise to the notion
+of cache-oblivious algorithms, e.g. data structures that perform well
+regardless of the size of the memory blocks or the number hierarchies. Bender
+et al. introduced the cache-oblivious B-tree which ...
 
 \end{abstract}
 
@@ -135,43 +136,193 @@ Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor 
 
 \subsection{External Memory Algorithms}
 
+
+Most algorithms assume an idealized model of computation that consists of a
+single CPU, which performs instructions, and memory, which is a flat array
+that can be read and written. However, in reality memory is not a flat array
+but rather a hierarchy from super fast on chip caches, to slower main memory,
+and even all the way down to the disk. When a program requests data, the data
+is found somewhere in the memory hierarchy and typically carried up the
+hierarchy to the fastest memory possible layer when the CPU is able to access
+it. Unfortunately, this fast memory often has small capacity and once it is
+filled and new data is requests some old entries must be evicted. Bring data
+from lower to higher levels in the memory hierarchy often takes a long time.
+In fact, access times between the different layers of the hierarchy can differ
+by many orders of magnitude and often dominate the overall runtime performance
+of an algorithm. External memory algorithms are wary of this fact and aim to
+solve problem by optimizing the number of memory transfers it performs rather
+than the number of instructions it executes. They often try to exploit the
+fact the memory hierarchies transfer data in blocks rather than individual
+atomic units. Thus, external memory algorithms are designed to not only limit
+the number of memory transfers but also preserve the locality of data so that
+when a memory access is performed, its cost is amortized.
+
 \subsection{B-trees}
 
-\subsection{CO vs CA}
+Since External memory algorithms are primarily concerned with efficient access
+to data, it is not surprise that most problems can be reduced to finding a
+suitable data structure that efficiently implement certain operations. A well
+known external memory data structure is the B-tree. At a high level, B-tree
+work by making their nodes the same size as a memory block in the hierarchy.
+Furthermore, the fanout in the tree (the number of children) is also
+proportional to the block size as well. The B-tree incurs $O(log(N))$ memory
+transfers for \Search{}, \Insert{}, and \Delete{} and is widely used in
+databases and filesystems.
+
+\subsection{DAM vs CO}
+
+The B-tree has two theoretical shortcomings. First, the B-tree is analyzed in
+a two-level memory model called the Disk Access Machine (DAM) \cite{Aggarwal}. However,
+in reality computing architectures typically have memory hierarchies that are
+much larger than two. The argument for the DAM model is that in practice only
+one level in the memory hierarchy tends to dominate the performance and thus a
+two-level memory model is sufficient for all intents and purposes. However,
+this does mean that, theoretically, B-trees can begin to incur an increasing
+number of memory transfers if the dominating level in the hierarchy changes.
+
+Additionally, the B-tree expects to know the the block size in the memory
+hierarchy in advanced. This means that the parameterized in code need to be
+changed for every level in the memory hierarchy which can be very difficult
+and error prone. Additionally, tuning this parameter may even be impossible in
+a heterogeneous computing environment.
+
+The shortcomings of the DAM model gave rise to the cache-oblivious (CO) model
+of computation. In the CO model the algorithm / data structure has no
+information about the memory hierarchy. It does not know anything about the
+speed of any level or the block size. At a conceptual level, the CO model
+allow algorithm designers to reason about the simple two-level model like DAM
+but prove results for any arbitrary memory hierarchy. In short, algorithms
+that perform well in a CO model should, in theory, perform well regardless of
+the block size in a memory hierarchy and thus should gracefully scale to
+multi-level hierarchies as well.
 
 \subsection{CO B-trees}
 
+In \cite{BenderDemainColton} Bender et al. introduce the cache-oblivious B-tree (CO B-tree). The
+CO B-tree is similar to normal the B-tree except that it does not have the
+block size of levels in the memory hierarchy as explicitly parameters.
+
+The CO B-tree is able to achieve the optimal search bound of $\Theta(log(N))$
+memory transfers, the optimal scan bound of $\Theta(N/B)$ memory transfers and
+efficient insertion and deletion operations. The CO B-tree was a seminal data
+structure that gave rise to many others in the future.
+
+This paper provides a survey of these different data structures. We start by
+analyzing the original CO B-tree and explain how it works. This includes a
+detailed description of the packed memory array (PMA) and strongly
+weight-balance binary search trees (SWSBT) that are integral to the CO
+B-tree's performance. Following this discussion we provide an analysis of the
+CO String B-tree,a CO B-tree with variable length keys, the CO Streaming
+B-tree, a CO B-tree that improves the cost of insertion at the expense of
+search, and the CO Concurrent B-tree (which allows multiple processes to
+access the data at the same time).
+
 \section{Background}
+
+
+
+
+High level idea:
+
+We want to have a B-tree that is cache oblivious. Okay, well, first we still
+need a way to actually store our data. We should use a tree. But what type of
+tree? Obviously it needs to be balanced but anything else? Yes, it needs to
+maintain the property that the number of descendants are $O(d^h)$. Why? It has
+to do with how we will ultimately layout the tree in memory, but we will get
+to that later.
+
+Okay, so, we find the tree that we want to use. Now what? Well, first of all,
+we need to make sure that it supports all of the operations that we want while
+maintain this key property. Lets start with searching. We will layout the tree
+in a vEB layout. This is helpful for two reasons. First, it is a nice way to
+store it in memory and second because it gives us a search bound for free. Now
+we need to make sure that it supports all of the other operations while
+maintain the key property. I can show you how it handles insertions and
+delete. Bam!
+
+Okay, so now, we have a data structure that holds the amount of memory that we
+want and it has the property that we will use later. Great! Now what? Well, we
+need to actually store this in memory some how. We said that we will use a vEB
+layout but that is only half of the story. We want a data structure that
+maintain the locality of as many elements as once while also keeping extra
+space to allow for future inserts. This is seemingly contradictory but we can
+do it!
+
+How? we use a PMA. The main problem is what inserts and delete may cause
+splits and merges which may cause huge parts and nodes of the tree to move
+around. So we need to first show how it is able to handle splits and merges
+efficiently in a cache oblivious manner. bam! done! Great!
+
+Now what? We also have the problem of updating pointers. If the points are
+close to one anther that is not a big deal. However, it is possible that the
+nodes are really far apart. Close means they are in the same block and thus
+only incur a single memory transfer. Far apart means they are more. To solve
+this problem we use buffer nodes and that works in a weird way. However, this
+only gives us a bad bound, can we do better? ****
+
+Yes! We use indirection. Indirection allows us to use another array and this
+makes out pointer updates much more efficient.
+
+We can now perform inserts and deletions faster. Additionally, our scans are
+super fast as well. Search have not changed at all because we still have our
+vEB structure and thus we are okay. But, we can also do a little better. If we
+are okay without having scans, we can improve inserts and deletion since we no
+longer have to maintain our indirection array.
+
+The important part is that our analysis above we never treat the block size as
+a constant. It is always a variable in our analysis but we are able to achieve
+the desired bounds. Thus, we have a cache-oblivious B-tree that does
+everything that we want.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 \subsection{Original CO B-trees}
 \label{sec:original}
 
-Bender et al. first introduced a cache oblivious B-tree (CO B-tree) in \cite{cobtree}. The
-CO B-tree was able to match the optimum search bound of $\Theta(log_B N)$ memory transfers 
-without including any specific parameterization describing the speed or sizes
-of the machine's memory hierarchy. 
+Bender et al. first introduced a cache oblivious B-tree (CO B-tree) in
+\cite{cobtree}. The CO B-tree was able to match the optimum search bound of
+$\Theta(log_B N)$ memory transfers without including any specific
+parameterization describing the speed or sizes of the machine's memory
+hierarchy.
 
-The CO B-tree paper presents three different data structures that make 
-different trade off in the number of memory transfer they perform. However, all of them 
-achieve their performance by structuring their elements as a strongly weight-balanced
-search tree (SWBST). The SWBST is then laid out into a packed memory array (PMA) 
-using a van Emde Boas (vEB) layout. The SWBST and PMA play crucial roles in the
-other cache-oblivious data structures that were developed after the CO B-tree and thus are
-described at length in the next two sections. 
+The CO B-tree paper presents three different data structures that make
+different trade off in the number of memory transfer they perform. However,
+all of them achieve their performance by structuring their elements as a
+strongly weight-balanced search tree (SWBST). The SWBST is then laid out into
+a packed memory array (PMA) using a van Emde Boas (vEB) layout. The SWBST and
+PMA play crucial roles in the other cache-oblivious data structures that were
+developed after the CO B-tree and thus are described at length in the next two
+sections.
 
 \subsection{Structure - SWBST}
 \label{sec:structure}
 
-Strongly weight-balanced search trees play a key role in CO B-tree. The weight of a node is $u$ is equal to
-the total number of $u$'s descendants plus 1. It can als be thought of as the sum of the weights of $u$'s children plus 1.
-Formally, $u$'s weight is: $w(u) = 1 + \sum_{v \in children} w(v)$.  
+Strongly weight-balanced search trees play a key role in CO B-tree. The weight
+of a node is $u$ is equal to the total number of $u$'s descendants plus 1. It
+can als be thought of as the sum of the weights of $u$'s children plus 1.
+Formally, $u$'s weight is: $w(u) = 1 + \sum_{v \in children} w(v)$.
 
-Most weight-balanced search trees which requires that the heights of a node's left and right subtrees are
-simply off by a constant factor. SWBST enforce the stronger property that a node at height $h$ in the tree (height is the node's
-distance from the leaves; leaves have a height of 1) has $\Theta c^h$ where $c$ is some constant. 
+Most weight-balanced search trees which requires that the heights of a node's
+left and right subtrees are simply off by a constant factor. SWBST enforce the
+stronger property that a node at height $h$ in the tree (height is the node's
+distance from the leaves; leaves have a height of 1) has $\Theta c^h$ where
+$c$ is some constant.
 
-A known data structure that achieves this property is the ``weight-balanced B-tree'' \cite{paper}. The CO B-tree leverages this
-data structure to maintain its elements. The next section describes how SWBST perform various operations
+A known data structure that achieves this property is the ``weight-balanced
+B-tree'' \cite{paper}. The CO B-tree leverages this data structure to maintain
+its elements. The next section describes how SWBST perform various operations
 while maintain their strongly weight-balanced property.
 
 \subsection{Operations}
@@ -182,10 +333,11 @@ The CO B-tree supports \Search, \Insert, \Delete, and \Scan operations.
 
 
 
-It should be noted, that keeping the level of indirection sorted is only needed in case we want
-to perform \Scan operations. If we do not need \Scan, then we can keep the indirection array in any arbitrary order
-reducing the cost of \Insert and \Delete by the $(log^2 N) /B$ factor making them incur $O(log_{B} N)$ memory transfers
-overall. 
+It should be noted, that keeping the level of indirection sorted is only
+needed in case we want to perform \Scan operations. If we do not need \Scan,
+then we can keep the indirection array in any arbitrary order reducing the
+cost of \Insert and \Delete by the $(log^2 N) /B$ factor making them incur
+$O(log_{B} N)$ memory transfers overall.
 
 \subsection{Layout - PMA}
 \label{sec:layout}

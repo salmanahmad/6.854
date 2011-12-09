@@ -515,8 +515,8 @@ B-tree. This is decried in detail in Section~\ref{sec:layout}.
 
 \subsubsection{Complexity}
 
-\Search uses $O(log_B N)$ memory transfers where $N = \Theta(c^{F_k})$ and $c$
-is your fanout. Note that $c$ is not treated as a constant since this is a
+\Search{} uses $O(log_B N)$ memory transfers where $N = \Theta(c^{F_k})$ and
+$c$ is your fanout. Note that $c$ is not treated as a constant since this is a
 cache-oblivious data structure. This bound is achieved by searching over the
 top and bottom recursive subtrees at each level when traversing the tree. A
 key trick is that when you visit a node you only search its largest buffer
@@ -527,21 +527,26 @@ searched with $O(1)$ memory accesses. Since the fanout is proportional to our
 block size it will take us $O(log_B N)$ block accesses until we get down to a
 subtree and thus, by induction, the worst case runtime is $O(log_B N)$.
 
-***** 
+% TODO - redo the insert section. Namely, include a discussion on how the
+% shuttle tree maintains its structure dynamically. I mention the node
+% splitting from pg 85 in the paper but do not include that in the analysis. I
+% should basically mention that the cost of dynamically maintaining the
+% shuttle tree O(logN / B) is not greater than the PMA log^2 N / B and thus
+% the dynamic updates do not change the number of memory tranfers.
 
-\Insert uses $O(log_{B+1} N / B^{\Theta(1/(loglogB)^2)} + (log^2 N) / B)$
-memory transfers. This improvement of the the CO B-tree is achieved because
-the shuttle tree's buffers are used to maintain locality of the elements long
-enough to amortize the cost of moving them down the tree and possible into
-another block. The proof is based on the fact that when we move an item from
-one block to another, caused by splitting or buffers being overfilled, at
-least $B^{\Theta(1/(loglogB)^2)}$ will move with that item. This is because,
-with insert, when a buffer overflows we move all of the elements from that
-buffer down the tree, not just the single one that caused the overflow. Thus,
-we amortize the cost of a single insert by the number of elements in a node's
-largest buffer.
-
-******
+\Insert{} uses $O(log_{B+1} N / B^{\Theta(1/(loglogB)^2)} + (log^2 N) / B)$
+memory transfers. This improvement over the CO B-tree is achieved because the
+shuttle tree's buffers are used to maintain locality of the elements long
+enough to amortize the cost of moving them down the tree and possibly into
+another memory block. The proof is based on the fact that when an element is
+moved from one block to another it is due to either a leaf node splitting or a
+node's buffer overflowing. Recall that when inserting a new element causes a
+buffer to overflow, all of the the elements from that buffer move down the
+tree, not just the single one that caused the overflow. Thus, the cost of
+inserting an element is amortize by the number of elements in a node's largest
+buffer. The number of elements in the largest buffer is
+$B^{\Theta(1/(loglogB)^2)}$ leading to the $B^{\Theta(1/(loglogB)^2)}$ factor
+in the big-Oh notation.
 
 \Scan{} uses an amortized $O(L/B)$ memory transfers to scan in $L$ consecutive
 elements. This cost obviously does not include the single \Search{} operation

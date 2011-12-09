@@ -235,9 +235,7 @@ the same time.
 \label{sec:original}
 
 Bender et al. first introduced a cache oblivious B-tree (CO B-tree) in
-\cite{cobtree}. The paper presents three different data structures that make
-different trade offs in the number of memory transfer they perform. However,
-all of them achieve their performance by structuring their elements as a
+\cite{cobtree}. The CO B-tree achieves its number of memory transfers by structuring its elements as a
 strongly weight-balanced search tree (SWBST). The SWBST is then laid out into
 a packed memory array (PMA) using a van Emde Boas (vEB) layout. The SWBST and
 PMA play crucial roles in the other cache-oblivious data structures that were
@@ -270,24 +268,24 @@ denote the top subtree and $B_1... B_k$ denote the bottom subtrees. The vEB
 layout is defined recursively using the order: $A, B1, ... B_k$. This layout
 is also shown in Figure~\ref{fig:veb}.
 
-A nice consequence of using a vEB layout is that we know that it will use
-$O(log_B N)$ memory transfers for searches [???, ???]. Thus, off the bat we
-have achieve the desired number of memory transfers for search queries. It
+A nice consequence of using a vEB layout is that it is known that it will use
+$O(log_B N)$ memory transfers for searches [???, ???]. Thus, the CO B-tree has already
+achieved the desired number of memory transfers for search queries. It
 still remains to be shown that the CO B-tree achieves the desired number of
 memory transfers for dynamic inserts and deletes.
 
-We know that the CO B-tree is going to use a balance search tree, but what
-kind?. Strongly weight-balanced search trees play a key role in CO B-tree. The
+It is known that the CO B-tree is going to use a balance search tree, but what
+kind? This is where the strongly weight-balanced search tree becomes useful. The
 weight of a node is $u$ is equal to the total number of $u$'s descendants plus
 1. It can also be thought of as the sum of the weights of $u$'s children plus
 1. Formally, $u$'s weight is: $w(u) = 1 + \sum_{v \in children} w(v)$.
 
 Most weight-balanced search trees which requires that the heights of a node's
-left and right subtrees are simply off by a constant factor. SWBST enforce the
+left and right subtrees are simply off by a constant factor. The SWBST enforces the
 stronger property that a node at height $h$ in the tree (height is the node's
 distance from the leaves; leaves have a height of 1) has $\Theta c^h$
 descendants where $c$ is some constant. This property becomes important later
-on when laying the tree out in memory (see Section~\ref{}).
+on when laying the tree out in memory (see Section~\ref{sec:layout}).
 
 A known data structure that achieves this property is the ``weight-balanced
 B-tree'' \cite{????}. The CO B-tree leverages this data structure to maintain
@@ -299,7 +297,7 @@ The definition of a SWBST given in [????] provides us with this bound for the
 weight of a node:
 
 \begin{equation}
-\frac{c^{h-1}}{2} \leq w(u) \leq 2c^{h-1}}
+\frac{c^{h-1}}{2} \leq w(u) \leq 2c^{h-1}
 \end{equation}
 
 Lets now consider insertions. To insert an element into a WSBST we search down
@@ -314,18 +312,18 @@ When we split a node, we naturally need to determine which children belong to
 which of the two nodes. We cannot just divide the children evenly because it
 may cause another violation. Thus, instead, we find the longest sequence of
 elements such that the weight of that subsequence is $\lceil w(u)/2 \rceil$.
-By doing this, we maintain the bound that $\frac{c^{h-1}{2} \leq w(u) \leq
-2c^{h-1}}$. We cascade these changes up the tree until all of the ancestors
+By doing this, we maintain the bound that $\frac{c^{h-1}}{2} \leq w(u) \leq
+2c^{h-1}$. We cascade these changes up the tree until all of the ancestors
 are balanced.
 
-Deletions are supported in the exact same way, except, we check is a node has
+Deletions are supported in the exact same way, except, we check if a node has
 a weight $w(u) < \frac{c^{h-1}}{2}$. In this case, we will merge two neighbors
 together and proceed up the tree. There is one edge case that needs to be
 handled. After merging, you may produce a new node that has a weight larger
 than the bounds. If this happens we immediately split the node again. Thus,
 this can be thought of as stealing nodes from a neighbor.
 
-WE have now shown that a SWBST achieves the desired property that the number
+We have now shown that the SWBST achieves the desired property that the number
 of descendants of a node is $c^h$. We can now show how to lay this tree out in
 memory.
 
@@ -347,17 +345,17 @@ maintains a windows into the array. When a window becomes too full or too
 empty, the elements are spread out within the context of a larger window. Two
 parameters are required, the window size and the threshold for trigger the
 spreading out. However, these parameters are not related to the block size of
-our memory level and thus do not violate the CO model of computation. Overall,
+the memory level and thus do not violate the CO model of computation. Overall,
 the PMA is able to keep extra space in $O(1 + (log^2 N) / B)$ memory
 transfers.
 
 Second, the PMA needs to handle the splitting and merging that will be caused
-by the SWBST discussed in the previous section. THe PMA is able to accomplish
+by the SWBST discussed in the previous section. The PMA is able to accomplish
 this using $O(1 + (log N) /B)$ memory transfers. The proof is based on the
 fact that each node has $c^h$ descendants (recall, this is the key property
 that SWBST provided). Thus, merging or splitting a node will cause $c^h$ nodes
 to move, requiring $O(1 + c^h/B)$ memory transfers. It follows from the
-defitinot of SWBST in [???] that when a node is rebalanced, it will require
+definition of SWBST in [???] that when a node is rebalanced, it will require
 $c^h$ insertions or deletions until it is rebalanced again. Thus, the
 amortized cost of each insertion and/or deletion is $O(1/B)$. When you split a
 node, it may go all the way up the tree and thus overall it will incur $O((log
@@ -374,14 +372,14 @@ do not move far away from one another. By using these buffers the PMA is able
 to achieve a the pointer update cost using $O(1+ logB / \sqrt{B}) log^2 N)$
 memory transfers.
 
-Of these three terms, the dominating factor is maintain room for newly
-inserted elements - $O((log^2N)/B)$. We know that SWBST achieve insertions and
-deletitions in $O(log_B N)$ if they are cache-aware. Thus, adding PMA makes
-the cache-oblivious and thereby incurring an additional $O((log^2N)/B)$ memory
+Of these three terms, the dominating factor is maintaining room for newly
+inserted elements - $O((log^2N)/B)$. We know that the SWBST achieves insertions and
+deletions in $O(log_B N)$ if it is cache-aware. Thus, adding PMA makes
+the SWBST cache-oblivious at the cost of incurring an additional $O((log^2N)/B)$ memory
 transfers.
 
-Therefore, overall, CO B-Tree achieve insertions and deletions in $O(log_B N +
-(log^2N)/B)$ memory transfers. However, they still achieve the optimal
+Therefore, overall, the CO B-Tree achieve insertions and deletions in $O(log_B N +
+(log^2N)/B)$ memory transfers. However, it still achieves the optimal
 $O(log_B N)$ memory transfers for searches, matching the performance of
 ordinary, cache-aware, B-trees.
 

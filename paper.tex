@@ -248,7 +248,7 @@ sections.
 \begin{figure}
 
 \begin{center}
-	\includegraphics[width=0.8\columnwidth]{figures/veb.png}
+	\includegraphics[width=0.8\columnwidth]{figures/veb.pdf}
 \end{center}
 
 \caption{An illustration of the van Emde Boas (vEB) layout}
@@ -475,10 +475,12 @@ this split are organized just like before and shown in Figure \ref{fig:veb}.
 \begin{figure}
 
 \begin{center}
-	\includegraphics[width=0.8\columnwidth]{figures/veb.png}
+	\includegraphics[width=0.8\columnwidth]{figures/buffers.pdf}
 \end{center}
 
-\caption{An illustration of how the shuttle tree determines the size of a node's linked list}
+\caption{An illustration of how the shuttle tree determines the size of a node's linked list. The 
+node $n2$ will have a linked list of size 2 because it is the leaf of two of the recursive subtrees. 
+On the other hand $n1$ will only have a linked list of size 1.}
 \label{fig:buffers}
 \end{figure}
 

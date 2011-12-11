@@ -200,11 +200,11 @@ The shortcomings of the DAM model gave rise to the cache-oblivious (CO) model
 of computation. In the CO model an algorithm has no information about the
 memory hierarchy. It does not know anything about the speed or the block size
 of any level. Conceptually, the CO model allows algorithm designers to reason
-about the simple two-level model like DAM but also prove results for any arbitrary
-multi-level memory hierarchy. This is because algorithms that perform well in
-a CO model should, in theory, perform well regardless of changes in block
-size, cache capacity, and cache speed. Consequently, CO algorithm should
-gracefully scale to multi-level hierarchies as well.
+about the simple two-level model like DAM but also prove results for any
+arbitrary multi-level memory hierarchy. This is because algorithms that
+perform well in a CO model should, in theory, perform well regardless of
+changes in block size, cache capacity, and cache speed. Consequently, CO
+algorithm should gracefully scale to multi-level hierarchies as well.
 
 \subsection{CO B-trees}
 
@@ -235,12 +235,12 @@ the same time.
 \label{sec:original}
 
 Bender et al. first introduced a cache oblivious B-tree (CO B-tree) in
-\cite{BenderDemainColton}. The CO B-tree achieves its number of memory transfers by structuring its elements as a
-strongly weight-balanced search tree (SWBST). The SWBST is then laid out into
-a packed memory array (PMA) using a van Emde Boas (vEB) layout. The SWBST and
-PMA play crucial roles in the other cache-oblivious data structures that were
-developed after the CO B-tree and thus are described at length in the next two
-sections.
+\cite{BenderDemainColton}. The CO B-tree achieves its number of memory
+transfers by structuring its elements as a strongly weight-balanced search
+tree (SWBST). The SWBST is then laid out into a packed memory array (PMA)
+using a van Emde Boas (vEB) layout. The SWBST and PMA play crucial roles in
+the other cache-oblivious data structures that were developed after the CO
+B-tree and thus are described at length in the next two sections.
 
 \subsection{Structure - SWBST}
 \label{sec:structure}
@@ -260,28 +260,28 @@ The ultimate goal of a CO B-tree is to reduce the number of memory transfers
 while supporting \Search{}, \Insert{}, and \Delete{} operations. Thus, at a
 fundamental level the CO B-tree still needs to maintain its data in some
 structure. That structure is a balanced search tree. The search tree is laid
-out according to a van Emde Boas (vEB) layout \cite{veb1}, \cite{veb2}. The idea of a vEB
-layout is fairly straight forward. Let $h$ denote the height of a tree. the
-vEB layout splits the tree approximately at height $h/2$. This splits the
-original tree into a ``top'' subtree and many ``bottom'' subtrees. Let $A$
-denote the top subtree and $B_1... B_k$ denote the bottom subtrees. The vEB
-layout is defined recursively using the order: $A, B1, ... B_k$. This layout
-is also shown in Figure~\ref{fig:veb}.
+out according to a van Emde Boas (vEB) layout \cite{veb1}, \cite{veb2}. The
+idea of a vEB layout is fairly straight forward. Let $h$ denote the height of
+a tree. the vEB layout splits the tree approximately at height $h/2$. This
+splits the original tree into a ``top'' subtree and many ``bottom'' subtrees.
+Let $A$ denote the top subtree and $B_1... B_k$ denote the bottom subtrees.
+The vEB layout is defined recursively using the order: $A, B1, ... B_k$. This
+layout is also shown in Figure~\ref{fig:veb}.
 
 A nice consequence of using a vEB layout is that it is known that it will use
-$O(log_B N)$ memory transfers for searches \cite{veb1}, \cite{veb2}. Thus, the CO B-tree has already
-achieved the desired number of memory transfers for search queries. It
-still remains to be shown that the CO B-tree achieves the desired number of
-memory transfers for dynamic inserts and deletes.
+$O(log_B N)$ memory transfers for searches \cite{veb1}, \cite{veb2}. Thus, the
+CO B-tree has already achieved the desired number of memory transfers for
+search queries. It still remains to be shown that the CO B-tree achieves the
+desired number of memory transfers for dynamic inserts and deletes.
 
 It is known that the CO B-tree is going to use a balance search tree, but what
-kind? This is where the strongly weight-balanced search tree becomes useful. The
-weight of a node is $u$ is equal to the total number of $u$'s descendants plus
-1. It can also be thought of as the sum of the weights of $u$'s children plus
-1. Formally, $u$'s weight is: $w(u) = 1 + \sum_{v \in children} w(v)$.
+kind? This is where the strongly weight-balanced search tree becomes useful.
+The weight of a node is $u$ is equal to the total number of $u$'s descendants
+plus 1. It can also be thought of as the sum of the weights of $u$'s children
+plus 1. Formally, $u$'s weight is: $w(u) = 1 + \sum_{v \in children} w(v)$.
 
-Most weight-balanced search trees require that the heights of a node's
-left and right subtrees are simply off by a constant factor. The SWBST enforces the
+Most weight-balanced search trees require that the heights of a node's left
+and right subtrees are simply off by a constant factor. The SWBST enforces the
 stronger property that a node at height $h$ in the tree (height is the node's
 distance from the leaves; leaves have a height of 1) has $\Theta c^h$
 descendants where $c$ is some constant. This property becomes important later
@@ -293,16 +293,16 @@ its elements. Before SWBST can be used, however, it remains to be proven that
 it maintains the the $c^h$ descendants property even after inserts and
 deletes.
 
-The definition of a SWBST given in \cite{swbst} provides us with this bound for the
-weight of a node:
+The definition of a SWBST given in \cite{swbst} provides us with this bound
+for the weight of a node:
 
 \begin{equation}
 \frac{c^{h-1}}{2} \leq w(u) \leq 2c^{h-1}
 \end{equation}
 
-Let us now consider insertions. To insert an element into a WSBST we search down
-the tree and find the natural place to insert the element - just like in any
-tree structure. After inserting the element into some node $w$, we have to
+Let us now consider insertions. To insert an element into a WSBST we search
+down the tree and find the natural place to insert the element - just like in
+any tree structure. After inserting the element into some node $w$, we have to
 check to see if any of $w$'s ancestors have become unbalanced by having a
 weight greater than $2^{d-1}$. If such an ancestor exists, it follows that
 every node along the path between that ancestor and $w$ will be un balanced as
@@ -313,14 +313,14 @@ which of the two nodes. We cannot just divide the children evenly because it
 may cause another violation. Thus, instead, we find the longest sequence of
 elements such that the weight of that subsequence is $\lceil w(u)/2 \rceil$.
 By doing this, we maintain the bound that $\frac{c^{h-1}}{2} \leq w(u) \leq
-2c^{h-1}$. We cascade these changes up the tree until all of the ancestors
-are balanced.
+2c^{h-1}$. We cascade these changes up the tree until all of the ancestors are
+balanced.
 
 Deletions are supported in the exact same way, except, we check if a node has
 a weight $w(u) < \frac{c^{h-1}}{2}$. In this case, we will merge two neighbors
 together and proceed up the tree. There is one edge case that needs to be
 handled. After merging, you may produce a new node that has a weight larger
-than the bounds. If this happens we immediately split the node again. This can 
+than the bounds. If this happens we immediately split the node again. This can
 be thought of as stealing nodes from a neighbor.
 
 We have now shown that the SWBST achieves the desired property that the number
@@ -334,32 +334,33 @@ memory.
 Now that we have our elements structured in a SWBST, we are still left with
 mapping this tree to memory and proving that it achieves our desired number of
 memory transfers. The packed memory array (PMA) was developed to solve this
-problem \cite{BenderDemainColton}. There are three main costs that the PMA is concerned with.
+problem \cite{BenderDemainColton}. There are three main costs that the PMA is
+concerned with.
 
 First, the PMA needs to maintain open space in its memory for newly inserted
 items. The PMA is able to accomplish this using $O(1 + (log^2 N) / B)$ memory
 transfers. Doing so may seem like attempting to achieve contradictory goals:
 maintaining the locality of elements while keeping space available for new
-inserts. The PMA uses a technique described in \cite{packedmemoryarray}. At a high level, the PMA
-maintains windows into the array. When a window becomes too full or too
-empty, the elements are spread out within the context of a larger window. Two
-parameters are required, the window size and the threshold for trigger the
-spreading out. However, these parameters are not related to the block size of
-the memory level and thus do not violate the CO model of computation. Overall,
-the PMA is able to keep extra space in $O(1 + (log^2 N) / B)$ memory
-transfers.
+inserts. The PMA uses a technique described in \cite{packedmemoryarray}. At a
+high level, the PMA maintains windows into the array. When a window becomes
+too full or too empty, the elements are spread out within the context of a
+larger window. Two parameters are required, the window size and the threshold
+for trigger the spreading out. However, these parameters are not related to
+the block size of the memory level and thus do not violate the CO model of
+computation. Overall, the PMA is able to keep extra space in $O(1 + (log^2 N)
+/ B)$ memory transfers.
 
-Second, the PMA needs to handle the splitting and merging caused
-by the SWBST discussed in the previous section. The PMA is able to accomplish
-this using $O(1 + (log N) /B)$ memory transfers. The proof is based on the
-fact that each node has $c^h$ descendants (recall, this is the key property
-that SWBST provided). Thus, merging or splitting a node will cause $c^h$ nodes
-to move, requiring $O(1 + c^h/B)$ memory transfers. It follows from the
-definition of SWBST in \cite{swbst} that when a node is rebalanced, it will require
-$c^h$ insertions or deletions until it is rebalanced again. Thus, the
-amortized cost of each insertion and/or deletion is $O(1/B)$. When you split a
-node, it may go all the way up the tree and thus overall it will incur $O((log
-N) / B)$ memory transfers.
+Second, the PMA needs to handle the splitting and merging caused by the SWBST
+discussed in the previous section. The PMA is able to accomplish this using
+$O(1 + (log N) /B)$ memory transfers. The proof is based on the fact that each
+node has $c^h$ descendants (recall, this is the key property that SWBST
+provided). Thus, merging or splitting a node will cause $c^h$ nodes to move,
+requiring $O(1 + c^h/B)$ memory transfers. It follows from the definition of
+SWBST in \cite{swbst} that when a node is rebalanced, it will require $c^h$
+insertions or deletions until it is rebalanced again. Thus, the amortized cost
+of each insertion and/or deletion is $O(1/B)$. When you split a node, it may
+go all the way up the tree and thus overall it will incur $O((log N) / B)$
+memory transfers.
 
 Third, the PMA needs to handle updating the parent and child pointers and may
 become invalidated because of how the nodes moved around. The PMA is able to
@@ -373,15 +374,15 @@ to achieve a the pointer update cost using $O(1+ logB / \sqrt{B}) log^2 N)$
 memory transfers.
 
 Of these three terms, the dominating factor is maintaining room for newly
-inserted elements - $O((log^2N)/B)$. We know that the SWBST achieves insertions and
-deletions in $O(log_B N)$ if it is cache-aware. Thus, adding PMA makes
-the SWBST cache-oblivious at the cost of incurring an additional $O((log^2N)/B)$ memory
-transfers.
+inserted elements - $O((log^2N)/B)$. We know that the SWBST achieves
+insertions and deletions in $O(log_B N)$ if it is cache-aware. Thus, adding
+PMA makes the SWBST cache-oblivious at the cost of incurring an additional
+$O((log^2N)/B)$ memory transfers.
 
-Therefore, overall, the CO B-Tree achieves insertions and deletions in 
-$O(log_B N + (log^2N)/B)$ memory transfers. However, it still achieves the optimal
-$O(log_B N)$ memory transfers for searches, matching the performance of
-ordinary, cache-aware, B-trees.
+Therefore, overall, the CO B-Tree achieves insertions and deletions in
+$O(log_B N + (log^2N)/B)$ memory transfers. However, it still achieves the
+optimal $O(log_B N)$ memory transfers for searches, matching the performance
+of ordinary, cache-aware, B-trees.
 
 \section{Variable Length Strings}
 \begin{figure}
@@ -394,19 +395,64 @@ ordinary, cache-aware, B-trees.
 \label{fig:string_structure}
 \end{figure}
 \subsection{Motivation}
-In order for B-trees to remain versatile, they must be able to accommodate various forms of data. However, traditional B-trees and string B-trees have suboptimal performance when variable length strings are used as keys. In addition, string B-trees do not support compression, and commonly used front compression is handled sub-optimally. Regular B-trees and string B-trees are not cache oblivious, and thus incur poorer performance as described previously. Range queries have poor performance in B-trees. In \cite{BenderFaKu06}, Bender et al. address these issues by designing a Cache Oblivious String B-tree (COSB-tree), which they argue works efficiently in these problem areas for variable length string keys. They also provide a modified front-compression scheme, which gives their approach the advantages of using less space and having improved locality within the compressed data.
 
-Two experiments are performed, in which a regular B-tree implementation tuned to various block sizes is compared to a static COSB-tree implementation. The experiment involved measuring the amount of time required to perform: 440,000 and 450,000 inserts of random values, a range query of all values, and 1000 random searches. The results of the experiment show that COSB-trees outperformed B-trees most of the time for random searches, range queries and random inserts. However, some point between 440,000 and 450,000 inserts the COSB-tree had to rebalance the entire tree, causing it to fall behind in this measurement. However, Bender et al. argue that the experiment was biased towards the B-tree implementation, since the trees are "young", and thus still well organized. The COSB-tree implementation is also compared to Berkeley DB **cite berkeley db**, and achieves performance comparable to Berkeley DB with tuned parameters. The results seem to show that there is a window in which large and small-block size B-trees perform poorly, and that COSB-trees may be a reasonable alternative to improve performance.
+In order for B-trees to remain versatile, they must be able to accommodate
+various forms of data. However, traditional B-trees and string B-trees have
+suboptimal performance when variable length strings are used as keys. In
+addition, string B-trees do not support compression, and commonly used front
+compression is handled sub-optimally. Regular B-trees and string B-trees are
+not cache oblivious, and thus incur poorer performance as described
+previously. Range queries have poor performance in B-trees. In
+\cite{BenderFaKu06}, Bender et al. address these issues by designing a Cache
+Oblivious String B-tree (COSB-tree), which they argue works efficiently in
+these problem areas for variable length string keys. They also provide a
+modified front-compression scheme, which gives their approach the advantages
+of using less space and having improved locality within the compressed data.
+
+Two experiments are performed, in which a regular B-tree implementation tuned
+to various block sizes is compared to a static COSB-tree implementation. The
+experiment involved measuring the amount of time required to perform: 440,000
+and 450,000 inserts of random values, a range query of all values, and 1000
+random searches. The results of the experiment show that COSB-trees
+outperformed B-trees most of the time for random searches, range queries and
+random inserts. However, some point between 440,000 and 450,000 inserts the
+COSB-tree had to rebalance the entire tree, causing it to fall behind in this
+measurement. However, Bender et al. argue that the experiment was biased
+towards the B-tree implementation, since the trees are "young", and thus still
+well organized. The COSB-tree implementation is also compared to Berkeley DB
+**cite berkeley db**, and achieves performance comparable to Berkeley DB with
+tuned parameters. The results seem to show that there is a window in which
+large and small-block size B-trees perform poorly, and that COSB-trees may be
+a reasonable alternative to improve performance. 
+
 \subsection{Description}
 
 \subsubsection{General COSB-tree Structure}
-The static COSB-tree consists of 2 layers: a centroid tree at the top, and an array of the keys stored in lexicographic order on the bottom. The leaves of the centroid tree contain pointers to keys in the array. The centroid tree is structured such that a search through the centroid tree identifies the local area of the desired key in the array. Then a sequential scan is performed across the array to find the key.
 
-The Dynamic COSB-tree consists of 3 major components: a centroid tree at the top; a packed memory array (PMA) structure of hash data for the keys known as the \emph{hashdata} layer; and on the bottom a PMA structure for the original key values, compressed using an augmented version of forward compression known as the \emph{keydata} layer.
+The static COSB-tree consists of 2 layers: a centroid tree at the top, and an
+array of the keys stored in lexicographic order on the bottom. The leaves of
+the centroid tree contain pointers to keys in the array. The centroid tree is
+structured such that a search through the centroid tree identifies the local
+area of the desired key in the array. Then a sequential scan is performed
+across the array to find the key.
 
-The centroid tree on a high level behaves similarly for static and dynamic COSB-trees. The leaves of the centroid tree point into the hashdata layer, where a sequential scan is performed to find the correct key by hash value. The hashdata layer points directly into the keydata layer, where the appropriate key is decoded, compared and returned.
+The Dynamic COSB-tree consists of 3 major components: a centroid tree at the
+top; a packed memory array (PMA) structure of hash data for the keys known as
+the \emph{hashdata} layer; and on the bottom a PMA structure for the original
+key values, compressed using an augmented version of forward compression known
+as the \emph{keydata} layer.
 
-In the following subsections, centroid trees are explained, and a summary of how to modify them to preserve balance and structure in the dynamic case is provided. Two iterations on forward compression are also summarized to show how to incrementally add support for variable length strings as keys for dynamic COSB-trees.
+The centroid tree on a high level behaves similarly for static and dynamic
+COSB-trees. The leaves of the centroid tree point into the hashdata layer,
+where a sequential scan is performed to find the correct key by hash value.
+The hashdata layer points directly into the keydata layer, where the
+appropriate key is decoded, compared and returned.
+
+In the following subsections, centroid trees are explained, and a summary of
+how to modify them to preserve balance and structure in the dynamic case is
+provided. Two iterations on forward compression are also summarized to show
+how to incrementally add support for variable length strings as keys for
+dynamic COSB-trees.
 
 \subsubsection{The Dictionary Matching Problem and Centroid Trees} %todo:cite dictionary matching problem--sources in cosb-tree paper
 \begin{figure}
@@ -418,43 +464,213 @@ In the following subsections, centroid trees are explained, and a summary of how
 \caption{A centroid tree example}
 \label{fig:centroid}
 \end{figure}
-In this approach to solving the dictionary matching problem *cite dictionary matching problem paper*, a dictionary $D$ of $N$ keys is preprocessed using hashing and divide-and-conquer via the construction of a centroid tree over the keys. This technique forms the basis for the Cache Oblivious String B-tree (COSB-tree) design. Consider the compacted trie $T$ of $D$. Bender et al. observe that there exists a centroid vertex $\rho$ in $T$ such that $\rho$ has between N/3 and 2N/3 descendants, inclusive. When searching for a key $k$ in the compacted trie, you traverse the tree as follows: for each node $y$ that you visit, if $y$ is a prefix of $x$, or $y$ matches $x$, continue on into the trie rooted at $y$ or \emph{down trie} of $y$. Otherwise traverse the trie resulting from excluding $y$ and its subtree. The \emph{centroid tree} is obtained by rooting the tree at \emph{centroid vertex} $\rho$, and making its children recursively defined centroid trees of its up and down tries. 
 
-At each step through the centroid tree, a consistent fraction of the nodes are eliminated from the search, resulting in an $O(logN)$ time bound when ignoring the time required to operate on keys. To make key comparisons faster, the keys are hashed and hash values are compared in place of the original key values. To avoid mismatches due to overlap in hash values, the original key values are compared after finding a match in hash values. The resulting time bound for \Search{} (interchangeable with \Member{}) is $O(||k||+\log{}N)$. If each node in the centroid tree knows its successor and predecessor descendants, \Pred{} and \Succ{} can be achieved in $O(||k||+||k'||+logN)$, where $k'$ is the successor or predecessor of $k$. Note that the additive $logN$ incurred by the use of centroid trees can be avoided when using main memory. Centroid trees are used to capitalize on locality for the cache oblivious string B-tree design, described later in this section.
+In this approach to solving the dictionary matching problem *cite dictionary
+matching problem paper*, a dictionary $D$ of $N$ keys is preprocessed using
+hashing and divide-and-conquer via the construction of a centroid tree over
+the keys. This technique forms the basis for the Cache Oblivious String B-tree
+(COSB-tree) design. Consider the compacted trie $T$ of $D$. Bender et al.
+observe that there exists a centroid vertex $\rho$ in $T$ such that $\rho$ has
+between N/3 and 2N/3 descendants, inclusive. When searching for a key $k$ in
+the compacted trie, you traverse the tree as follows: for each node $y$ that
+you visit, if $y$ is a prefix of $x$, or $y$ matches $x$, continue on into the
+trie rooted at $y$ or \emph{down trie} of $y$. Otherwise traverse the trie
+resulting from excluding $y$ and its subtree. The \emph{centroid tree} is
+obtained by rooting the tree at \emph{centroid vertex} $\rho$, and making its
+children recursively defined centroid trees of its up and down tries.
 
-The centroid tree is built using $O(N/\log{}N)$ keys, and the centroid tree is layed out in memory using a modified van Emde Boas (vEB) layout for weight-balanced binary trees. The \emph{hyperhyperfloors} of nodes are used as a guide for cutting the tree into equal-size subtrees for the vEB layout. The \emph{hyperhyperfloor} of x is denoted as $\lhyperfloor{}x\rhyperfloor{}$, and refers to rounding x down to the nearest power of a power of 2. This ensures trees of equal size on all \emph{levels of detail}, as the centroid tree is traversed.
+At each step through the centroid tree, a consistent fraction of the nodes are
+eliminated from the search, resulting in an $O(logN)$ time bound when ignoring
+the time required to operate on keys. To make key comparisons faster, the keys
+are hashed and hash values are compared in place of the original key values.
+To avoid mismatches due to overlap in hash values, the original key values are
+compared after finding a match in hash values. The resulting time bound for
+\Search{} (interchangeable with \Member{}) is $O(||k||+\log{}N)$. If each node
+in the centroid tree knows its successor and predecessor descendants, \Pred{}
+and \Succ{} can be achieved in $O(||k||+||k'||+logN)$, where $k'$ is the
+successor or predecessor of $k$. Note that the additive $logN$ incurred by the
+use of centroid trees can be avoided when using main memory. Centroid trees
+are used to capitalize on locality for the cache oblivious string B-tree
+design, described later in this section.
 
-The following approach is used to rebalance the centroid tree: Put all the elements in DFS or Euler tour order for the trie. Given this order, scan the trie to identify the centroid vertex, partition the trie into its respective up and down tries, and recurse on the up and down tries. The Euler tour order can be achieved via $O(\log{}N)$ scans, since the trie is only $O(\log{}N)$ deep. Thus updates have amortized cost of $O(1+\log^{2}N/B)$ memory transfers. Note that this doesn't include updating successor or predecessor pointers, which is described in more detail below.
+The centroid tree is built using $O(N/\log{}N)$ keys, and the centroid tree is
+layed out in memory using a modified van Emde Boas (vEB) layout for
+weight-balanced binary trees. The \emph{hyperhyperfloors} of nodes are used as
+a guide for cutting the tree into equal-size subtrees for the vEB layout. The
+\emph{hyperhyperfloor} of x is denoted as $\lhyperfloor{}x\rhyperfloor{}$, and
+refers to rounding x down to the nearest power of a power of 2. This ensures
+trees of equal size on all \emph{levels of detail}, as the centroid tree is
+traversed.
 
-The following approach is used for maintaining the vEB layout for centroid trees in the dynamic COSB-tree: first, weight balance is relaxed from a maximum weight difference of 2 between left and right subtrees, to a larger constant $c$. Thus a node $v$ only becomes out of balance every $\Omega(\textsc{weight(v)})$ insertions or deletions of descendants of v, reducing the frequency of rebuilds. The nodes are stored in a PMA structure, preserving order of the nodes using $\Theta(N)$space, apart from inserts and deletes. On insert or delete, the structure is scanned in both directions starting from the update point for sections of the array to rearrange based on a "density" threshold of the section. Rearranging here refers to evenly distributing the nodes across the section to make room for more nodes. To ensure that updating pointers isn't too expensive, any node included in the section must have its subtrees included. Specifically, the section is built up from the the lowest subtree level that contains or contained the update point, and neighboring subtrees are continuously added until either the density threshold is met or the entire current subtree layout at this "level of detail" is included. For example, suppose a node is inserted at the leaf of some lower recursive subtree $L_{i}$. To continue building up this section, $L_{i-1}$ or $L_{i+1}$ could be added. If all the lower recursive subtrees $L_{1}$,$L_{2}$,...,$L_{x}$ have been added, the top level tree $U$ is added. This corresponds to a subtree $L'_{j}$ one level above. Thus repeat this process until the density threshold is met, and then rebalance the tree. This approach depends on the fact that all the recursive subtrees at the same level of detail asymptotically have the same size, which Bender et al. prove about the hyperhyperfloor-based vEB layout described previously. This approach results in an amortized update cost of $O(1+(\log{}N)/B)$ memory transfers per update. In conjunction with the cost of rebuilds described above, this is only an additive $O(\log{}N/B)$ factor, so the overall bound is amortized $O(1+\log^{2}N/B)$ memory transfers.
+The following approach is used to rebalance the centroid tree: Put all the
+elements in DFS or Euler tour order for the trie. Given this order, scan the
+trie to identify the centroid vertex, partition the trie into its respective
+up and down tries, and recurse on the up and down tries. The Euler tour order
+can be achieved via $O(\log{}N)$ scans, since the trie is only $O(\log{}N)$
+deep. Thus updates have amortized cost of $O(1+\log^{2}N/B)$ memory transfers.
+Note that this doesn't include updating successor or predecessor pointers,
+which is described in more detail below.
 
-Note that making the COSB-trees dynamic causes updates to successor and predecessor pointers in the centroid tree to be expensive. Thus the notion of ancestors is relaxed to the following (Lemma 10 in \cite{BenderFaKu06}): Let $\alpha$ be the parent node of $\gamma$ in the compressed trie. Then either $\alpha$ is a descendant of $\gamma$ or $\gamma$ is a descendant of $\alpha$. The proof is as follows: As you recursively traverse the trie, both $\alpha$ and $\gamma$ are in the up trie or down trie, until at some point one of them must be the centroid vertex. This is used to redefine what the predecessor successor pointers refer to. The centroid may no loner point to the correct predecessor or successor with respect to the relevant subtrie, but one of the matched ancestors by construction must point to the correct predecessor or successor. Thus for the dynamic case, when dealing with successors and predecessors, $O(logN)$ ancestors' successor and predecessor pointers in addition to the successor and predecessor pointers of the node in question must be checked. However, this is an additive factor, so the same time bound for update described above is still achieved.
+The following approach is used for maintaining the vEB layout for centroid
+trees in the dynamic COSB-tree: first, weight balance is relaxed from a
+maximum weight difference of 2 between left and right subtrees, to a larger
+constant $c$. Thus a node $v$ only becomes out of balance every
+$\Omega(\textsc{weight(v)})$ insertions or deletions of descendants of v,
+reducing the frequency of rebuilds. The nodes are stored in a PMA structure,
+preserving order of the nodes using $\Theta(N)$space, apart from inserts and
+deletes. On insert or delete, the structure is scanned in both directions
+starting from the update point for sections of the array to rearrange based on
+a "density" threshold of the section. Rearranging here refers to evenly
+distributing the nodes across the section to make room for more nodes. To
+ensure that updating pointers isn't too expensive, any node included in the
+section must have its subtrees included. Specifically, the section is built up
+from the the lowest subtree level that contains or contained the update point,
+and neighboring subtrees are continuously added until either the density
+threshold is met or the entire current subtree layout at this "level of
+detail" is included. For example, suppose a node is inserted at the leaf of
+some lower recursive subtree $L_{i}$. To continue building up this section,
+$L_{i-1}$ or $L_{i+1}$ could be added. If all the lower recursive subtrees
+$L_{1}$,$L_{2}$,...,$L_{x}$ have been added, the top level tree $U$ is added.
+This corresponds to a subtree $L'_{j}$ one level above. Thus repeat this
+process until the density threshold is met, and then rebalance the tree. This
+approach depends on the fact that all the recursive subtrees at the same level
+of detail asymptotically have the same size, which Bender et al. prove about
+the hyperhyperfloor-based vEB layout described previously. This approach
+results in an amortized update cost of $O(1+(\log{}N)/B)$ memory transfers per
+update. In conjunction with the cost of rebuilds described above, this is only
+an additive $O(\log{}N/B)$ factor, so the overall bound is amortized
+$O(1+\log^{2}N/B)$ memory transfers.
+
+Note that making the COSB-trees dynamic causes updates to successor and
+predecessor pointers in the centroid tree to be expensive. Thus the notion of
+ancestors is relaxed to the following (Lemma 10 in \cite{BenderFaKu06}): Let
+$\alpha$ be the parent node of $\gamma$ in the compressed trie. Then either
+$\alpha$ is a descendant of $\gamma$ or $\gamma$ is a descendant of $\alpha$.
+The proof is as follows: As you recursively traverse the trie, both $\alpha$
+and $\gamma$ are in the up trie or down trie, until at some point one of them
+must be the centroid vertex. This is used to redefine what the predecessor
+successor pointers refer to. The centroid may no loner point to the correct
+predecessor or successor with respect to the relevant subtrie, but one of the
+matched ancestors by construction must point to the correct predecessor or
+successor. Thus for the dynamic case, when dealing with successors and
+predecessors, $O(logN)$ ancestors' successor and predecessor pointers in
+addition to the successor and predecessor pointers of the node in question
+must be checked. However, this is an additive factor, so the same time bound
+for update described above is still achieved.
 
 \subsubsection{Modifying Front Compression to Preserve Locality}
-This section provides a brief summary of how front compression is modified to optimize compression and decoding for static and dynamic cache-oblivious string B-trees. Consider a sequence of $j$ keys to store $k_{1}$,  $k_{2}$, ...,  $k_{j}$. Without compression, this requires $\sum_{j}||k_{j}||$ space in memory. To compress these keys using front compression, let $\pi_{j}$ be the longest common prefix between $k_{j}$ and $k_{j+1}$. Now instead we store the keys in the following format:  
+
+This section provides a brief summary of how front compression is modified to
+optimize compression and decoding for static and dynamic cache-oblivious
+string B-trees. Consider a sequence of $j$ keys to store $k_{1}$, $k_{2}$,
+..., $k_{j}$. Without compression, this requires $\sum_{j}||k_{j}||$ space in
+memory. To compress these keys using front compression, let $\pi_{j}$ be the
+longest common prefix between $k_{j}$ and $k_{j+1}$. Now instead we store the
+keys in the following format:
+
 \begin{center}
 $k_{1}$,$||\pi_{2}||$,$\sigma_{2}$,$||\pi_{3}||$$\sigma_{3}$,...,$||\pi_{j}||$,$\sigma_{j}$
-\end{center}
-where $\sigma_{j}$ is the suffix of $k_{j}$ after removing the first $\pi_{j}$ bits. This saves almost $\sum_{j}||\pi_{j}||$ memory. However, since decoding $k_{j}$ involves concatenating the first $\pi_{j}$ bits of $k_{j-1}$ to $\sigma_{j}$, $k_{j-1}$ must be decoded. $k_{j-1}$ may depend on previous keys as well, making $k_{j}$ expensive to decode.
+\end{center} 
 
-The goal of modifying front compression is to maintain some of the space benefits to compression while reducing the high decoding cost and keeping the size of D small. Bender et al.  provide a modification for static COSB-trees that reduces the high decoding cost of front compression of D to $O(1+||k||B)$, with size $O(\llangle{D}\rrangle{})$ after compression. The modification works as follows: Let $c = 2 + \epsilon/2$, and let $k_{1}$ be the first key added to the compression stream. For each subsequent key $k_{i}$, if $k_{i}$ can be decoded with just the last $c||k_{i}||$ characters, add $\pi_{i}$,$\sigma_{i}$ like before. Otherwise, add 0,$k_{i}$, which means add $k_{i}$ to the stream in its uncompressed form. By construction, this scheme guarantees that any key $k_{j}$ can be decoded in $O(1+||k||B)$ memory transfers.%todo: add something about why this isO(<<D>>)?
+where $\sigma_{j}$ is the suffix of $k_{j}$ after removing the first $\pi_{j}$
+bits. This saves almost $\sum_{j}||\pi_{j}||$ memory. However, since decoding
+$k_{j}$ involves concatenating the first $\pi_{j}$ bits of $k_{j-1}$ to
+$\sigma_{j}$, $k_{j-1}$ must be decoded. $k_{j-1}$ may depend on previous keys
+as well, making $k_{j}$ expensive to decode.
 
-However, the above modification falls short for anticipating insertions and deletions. The previous modification relies on each key being decoded within $c||k^{*}||$ elements of the compressed array, but this is no longer guaranteed when new keys can be inserted to the left of $k$. To make the locality-preserving front compression technique suitable for dynamic COSB-trees, Bender et al. modify the algorithm to include an extra copied prefix for each key. Consider the $3c||k||$ characters that would be to the left of a new key$k^{*}$ after insertion. Let $k'$ be the key at the end of this range. The idea is to prevent the insertion of $k^{*}$ from affecting any non-copied keys just to the right of $k'$, since this could potentially increase their decode cost. Compute the length $l$ of the largest common prefix (lcp) between $k^{*}$ and $k'$, and compare $l$ to all the other lcp's in this range. $l$ represents the minimum length for any lcp between $k^{*}$ and $k'$, since the keys are stored in lexicographic order. If there is a copied prefix of length at least $l$ or a copied key within this range, insert $k^{*}$ as usual. Inserting $k^{*}$ will have no negative effect in this respect, since the decode length is effectively reset by the copied key or prefix like before. However, if inserting $k^{*}$ causes the minimum length of the lcp's in this range to increase, we need to fix the compression. To do this, we update the lcp of the key directly to the right of $k^{*}$ and store an extra copy of this lcp with $k^{*}$ itself. In this way, we can charge the work of copying extra prefixes for a new key to the appropriate number of elements before it. This number is determined by the length of the extra copied prefix stored with the key.
+The goal of modifying front compression is to maintain some of the space
+benefits to compression while reducing the high decoding cost and keeping the
+size of D small. Bender et al. provide a modification for static COSB-trees
+that reduces the high decoding cost of front compression of D to
+$O(1+||k||B)$, with size $O(\llangle{D}\rrangle{})$ after compression. The
+modification works as follows: Let $c = 2 + \epsilon/2$, and let $k_{1}$ be
+the first key added to the compression stream. For each subsequent key
+$k_{i}$, if $k_{i}$ can be decoded with just the last $c||k_{i}||$ characters,
+add $\pi_{i}$,$\sigma_{i}$ like before. Otherwise, add 0,$k_{i}$, which means
+add $k_{i}$ to the stream in its uncompressed form. By construction, this
+scheme guarantees that any key $k_{j}$ can be decoded in $O(1+||k||B)$ memory
+transfers.%todo: add something about why this isO(<<D>>)?
+
+However, the above modification falls short for anticipating insertions and
+deletions. The previous modification relies on each key being decoded within
+$c||k^{*}||$ elements of the compressed array, but this is no longer
+guaranteed when new keys can be inserted to the left of $k$. To make the
+locality-preserving front compression technique suitable for dynamic
+COSB-trees, Bender et al. modify the algorithm to include an extra copied
+prefix for each key. Consider the $3c||k||$ characters that would be to the
+left of a new key$k^{*}$ after insertion. Let $k'$ be the key at the end of
+this range. The idea is to prevent the insertion of $k^{*}$ from affecting any
+non-copied keys just to the right of $k'$, since this could potentially
+increase their decode cost. Compute the length $l$ of the largest common
+prefix (lcp) between $k^{*}$ and $k'$, and compare $l$ to all the other lcp's
+in this range. $l$ represents the minimum length for any lcp between $k^{*}$
+and $k'$, since the keys are stored in lexicographic order. If there is a
+copied prefix of length at least $l$ or a copied key within this range, insert
+$k^{*}$ as usual. Inserting $k^{*}$ will have no negative effect in this
+respect, since the decode length is effectively reset by the copied key or
+prefix like before. However, if inserting $k^{*}$ causes the minimum length of
+the lcp's in this range to increase, we need to fix the compression. To do
+this, we update the lcp of the key directly to the right of $k^{*}$ and store
+an extra copy of this lcp with $k^{*}$ itself. In this way, we can charge the
+work of copying extra prefixes for a new key to the appropriate number of
+elements before it. This number is determined by the length of the extra
+copied prefix stored with the key.
 
 \subsection{Operators}
+
 %todo: figure out how to do range queries from this paper somehow...
-The operations supported are dictated by the Dictionary Matching problem. These operations are: \Search{} (synonymous with \Member{}), \Pred{}, \Succ{}, and \Range{}. The behavior of each operation for dynamic COSB-trees is described below. \Insertkonly{} and \Delete{} are also supported but not described here.
 
-\Search{}: works as follows for a given key $k$. Compute the hash value for $k$ and call it $\rho$, and traverse the centroid tree of the COSB-tree using $\rho$ to obtain the successor $\rho_{s}$ and predecessor $\rho_{p}$ of $k$. Index into the hashdata layer and perform a sequential scan across the PMA structure from $\rho_{p}$  to $\rho_{s}$ to find $\rho$. On a match with value $\rho'$, index into the keydata layer and decode $\rho'$ to obtain the resulting key $k'$. If $k' = k$, return true. If $k' \ne k$ or $k$ was not found during the sequential scan return false.
+The operations supported are dictated by the Dictionary Matching problem.
+These operations are: \Search{} (synonymous with \Member{}), \Pred{}, \Succ{},
+and \Range{}. The behavior of each operation for dynamic COSB-trees is
+described below. \Insertkonly{} and \Delete{} are also supported but not
+described here.
 
-\Pred{},\Succ{}: works in the same way as \Search{} until the sequential scan in the hashdata layer. When scanning the hashdata layer, look for $\rho_{p}$ or $\rho_{s}$, respectively, in place of $\rho$, and compare the appropriate keys in the keydata layer. 
+\Search{}: works as follows for a given key $k$. Compute the hash value for
+$k$ and call it $\rho$, and traverse the centroid tree of the COSB-tree using
+$\rho$ to obtain the successor $\rho_{s}$ and predecessor $\rho_{p}$ of $k$.
+Index into the hashdata layer and perform a sequential scan across the PMA
+structure from $\rho_{p}$ to $\rho_{s}$ to find $\rho$. On a match with value
+$\rho'$, index into the keydata layer and decode $\rho'$ to obtain the
+resulting key $k'$. If $k' = k$, return true. If $k' \ne k$ or $k$ was not
+found during the sequential scan return false.
 
-\Range{}: The paper doesn't say, but presumably this is very similar to \Search{}. Let $k_{b}$ be the beginning of the range and let $k_{e}$ be the end of the range. Hash the range keys and identify the predecessor of $\rho_{b}$ and the successor of $\rho_{e}$ using the centroid tree. Scan the hashdata layer across from  $\rho_{b,p}$ to  $\rho_{e,s}$. Only start noting the beginning of range when the first key with hash value after $\rho_{b}$, and stop once we reach the first key with hash value after $\rho_{e}$. Decode and return the set of keys within the given range in the keydata layer.
+\Pred{},\Succ{}: works in the same way as \Search{} until the sequential scan
+in the hashdata layer. When scanning the hashdata layer, look for $\rho_{p}$
+or $\rho_{s}$, respectively, in place of $\rho$, and compare the appropriate
+keys in the keydata layer.
+
+\Range{}: The paper doesn't say, but presumably this is very similar to
+\Search{}. Let $k_{b}$ be the beginning of the range and let $k_{e}$ be the
+end of the range. Hash the range keys and identify the predecessor of
+$\rho_{b}$ and the successor of $\rho_{e}$ using the centroid tree. Scan the
+hashdata layer across from $\rho_{b,p}$ to $\rho_{e,s}$. Only start noting the
+beginning of range when the first key with hash value after $\rho_{b}$, and
+stop once we reach the first key with hash value after $\rho_{e}$. Decode and
+return the set of keys within the given range in the keydata layer.
 
 \subsection{Complexity}
-\Search{} takes $O(1+\log_{B}N+||k||/B)$ memory transfers with high probability (w.h.p.). Traversing the centroid tree requires  $O(1+\log_{B}N)$ memory transfers, since the tree is built using$O(N/logN)$ keys and is balanced. Once in the hashdata layer, we are already within $O(logN)$ keys of $k$. Thus the local scan requires $O(1+(||k||+\log{}N)/B)$ memory transfers. Obtaining $k$ from the keydata layer requires no more memory transfers than the scan in the hashdata layer. The \Pred{} and \Succ{} operations are almost identical in behavior to searches, and thus only have the added cost of having to operate on $k'$, where $k'$ is the predecessor or successor, respectively. These operations as a result take $O(1+\log_{B}N+||k||/B+||k'||/B)$ memory transfers w.h.p.. Similarly, range queries take $O(1+\log_{B}N+(||k||+||k'||+\llangle{}Q\rrangle{})/B)$ memory transfers, where in this case $k'$ is the other end of the range and $Q$ is the set of keys within the given range.
 
-\Insertkonly{} and \Delete{} w.h.p. require $O(1+\log_{B}N+\log^{2}N||k||/B)$ memory transfers. As mentioned previously, due to rebuilds updates have amortized cost of $O(1+(\log^{2}N)/B)$ memory transfers. The rest of the cost for insertions and deletions is due to having to find the correct key to delete or location for insert, which can be seen from the cost of \Search{}.
+\Search{} takes $O(1+\log_{B}N+||k||/B)$ memory transfers with high
+probability (w.h.p.). Traversing the centroid tree requires $O(1+\log_{B}N)$
+memory transfers, since the tree is built using$O(N/logN)$ keys and is
+balanced. Once in the hashdata layer, we are already within $O(logN)$ keys of
+$k$. Thus the local scan requires $O(1+(||k||+\log{}N)/B)$ memory transfers.
+Obtaining $k$ from the keydata layer requires no more memory transfers than
+the scan in the hashdata layer. The \Pred{} and \Succ{} operations are almost
+identical in behavior to searches, and thus only have the added cost of having
+to operate on $k'$, where $k'$ is the predecessor or successor, respectively.
+These operations as a result take $O(1+\log_{B}N+||k||/B+||k'||/B)$ memory
+transfers w.h.p.. Similarly, range queries take
+$O(1+\log_{B}N+(||k||+||k'||+\llangle{}Q\rrangle{})/B)$ memory transfers,
+where in this case $k'$ is the other end of the range and $Q$ is the set of
+keys within the given range.
+
+\Insertkonly{} and \Delete{} w.h.p. require $O(1+\log_{B}N+\log^{2}N||k||/B)$
+memory transfers. As mentioned previously, due to rebuilds updates have
+amortized cost of $O(1+(\log^{2}N)/B)$ memory transfers. The rest of the cost
+for insertions and deletions is due to having to find the correct key to
+delete or location for insert, which can be seen from the cost of \Search{}.
 
 \section{Streaming B-trees}
 
@@ -675,8 +891,8 @@ The base case is trivial. The first three levels of the COLA each have at most
 eight elements (note that these elements are either actual real elements or
 lookahead pointers). The COLA can obviously search these levels with no more
 than eight member transfers. As the COLA follows lookahead pointers to the
-higher levels, it will eventually get to a level where $k \geq 3$. Note that the
-COLA does not ``enter'' this level at the start of the array; rather, its
+higher levels, it will eventually get to a level where $k \geq 3$. Note that
+the COLA does not ``enter'' this level at the start of the array; rather, its
 arrived here by following the real lookahead pointers from the levels below
 and thus is at some index $i$ that contains an element $e_i$ such that $e_i <
 e$ and $e$ is the element being searched for. The goal at this point is to
@@ -685,11 +901,11 @@ duplicate lookahead pointers can be used to locate the ``next'' and
 ``previous'' real lookahead pointers in the next level. The two real lookahead
 pointers are used to and restrict the search in the next level. Recall that at
 each level in the COLA every eighth element in a level is present in the
-previous level. Thus, it follows that in the next level only 8 elements need to be
-searched. Furthermore, since the current level was reach from a lower level,
-it follows that only 8 elements need to be searched on this level to find the
-appropriate $i$. Thus, overall, the COLA uses $O(8log(N)) = O(log(N))$ memory
-transfers.
+previous level. Thus, it follows that in the next level only 8 elements need
+to be searched. Furthermore, since the current level was reach from a lower
+level, it follows that only 8 elements need to be searched on this level to
+find the appropriate $i$. Thus, overall, the COLA uses $O(8log(N)) =
+O(log(N))$ memory transfers.
 
 \subsubsection{Performance}
 
@@ -703,114 +919,115 @@ structure when random insertions are common.
 \section{Concurrency}
 
 \subsection{Motivation}
-B-trees are often used as an indexing data structure for various
-database and file systems. Thus, for a cache-oblivious B-tree data structure
-to be of practical value, it must be able to handle concurrent access and modification
-of its internal state. The straw-man solution is to simply ensure mutual exclusion
-on the entire data structure; this approach, however, yields poor performance.
+
+B-trees are often used as an indexing data structure for various database and
+file systems. Thus, for a cache-oblivious B-tree data structure to be of
+practical value, it must be able to handle concurrent access and modification
+of its internal state. The straw-man solution is to simply ensure mutual
+exclusion on the entire data structure; this approach, however, yields poor
+performance.
 
 Various concurrency schemes for traditional cache-aware B-trees have been
 proposed \cite{BayerS77, LehmanY81}. We now survey a concurrency scheme for CO
 B-trees, first presented in \cite{BenderFiGi05}. Bender develops two different
 data structures to solve this problem: the first is an exponential CO B-tree,
-the second is a CO B-tree based on a packed memory array (PMA). Bender
-also presents a lock-free variant of the latter data structure. For
-the remainder of the discussion, assume that the keys are fixed-size integer
-keys.
+the second is a CO B-tree based on a packed memory array (PMA). Bender also
+presents a lock-free variant of the latter data structure. For the remainder
+of the discussion, assume that the keys are fixed-size integer keys.
 
 \subsection{Description}
+
 Before describing the data structures in more detail, we first consider
 the concurrency model which is used throughout \cite{BenderFiGi05}.
 
 \subsubsection{Concurrency Model}
-The concurrency model starts with a system that has a total cache
-size of $M$ and block size of $B$. There are $P$ processors in the
-system, each with a cache of size $\frac{M}{P}$. A particular block
-can reside in multiple caches in \textit{shared} mode. However, if a
-processor wants to perform a write to a block, it must acquire it in 
-\textit{exclusive} mode, in which case that block can only reside in
-a single cache. In this model, a request for a block costs a single
-memory transfer.
 
-For concurrency control, two primitives are used. The first is
-locks. The second is \textit{load-linked/store-conditional} (LL/SC).
-The authors argue that LL/SC provides better performance than 
-using a \textit{compare-and-swap} (CAS) primitive, but their 
-techniques can be extended to use CAS.
+The concurrency model starts with a system that has a total cache size of $M$
+and block size of $B$. There are $P$ processors in the system, each with a
+cache of size $\frac{M}{P}$. A particular block can reside in multiple caches
+in \textit{shared} mode. However, if a processor wants to perform a write to a
+block, it must acquire it in \textit{exclusive} mode, in which case that block
+can only reside in a single cache. In this model, a request for a block costs
+a single memory transfer.
+
+For concurrency control, two primitives are used. The first is locks. The
+second is \textit{load-linked/store-conditional} (LL/SC). The authors argue
+that LL/SC provides better performance than using a \textit{compare-and-swap}
+(CAS) primitive, but their techniques can be extended to use CAS.
 
 \subsection{Exponential CO B-tree}
-This data structure is based on a strongly weight-balanced 
-exponential tree found in \cite{Bender2002}. A tuning parameter
-$1 < \alpha < 2$ is chosen for the data structure. Each node
-in the tree maintains both keys which divide up its children,
-in addition to a \textit{right-link} pointer, which contains
-both a pointer to a node's right sibling, plus the key
-value of the minimum key in the node's right sibling. If no such
-sibling exists, a sentinel $\infty$ pointer is used.
 
-A node's layout in memory is as follows. Suppose a node has $k$
-elements in it. The first part of the node consists of a static
-CO search B-tree, containing the $k$ elements. The tree is sized
-to be a complete $\lhyperceil k \rhyperceil$-leaf tree. The second
-part of the node consists of a $\lhyperceil k \rhyperceil$-size array
-contained the $k$ elements in sorted order. The leaf nodes of the
-CO search tree point to the associated entries in the array.
+This data structure is based on a strongly weight-balanced exponential tree
+found in \cite{Bender2002}. A tuning parameter $1 < \alpha < 2$ is chosen for
+the data structure. Each node in the tree maintains both keys which divide up
+its children, in addition to a \textit{right-link} pointer, which contains
+both a pointer to a node's right sibling, plus the key value of the minimum
+key in the node's right sibling. If no such sibling exists, a sentinel
+$\infty$ pointer is used.
+
+A node's layout in memory is as follows. Suppose a node has $k$ elements in
+it. The first part of the node consists of a static CO search B-tree,
+containing the $k$ elements. The tree is sized to be a complete $\lhyperceil k
+\rhyperceil$-leaf tree. The second part of the node consists of a $\lhyperceil
+k \rhyperceil$-size array contained the $k$ elements in sorted order. The leaf
+nodes of the CO search tree point to the associated entries in the array.
 
 \subsubsection{Operations}
-The operations supported by the exponential CO B-tree are \Search{}
-and \Insert{}. The authors do not discuss range-queries, and this
-is presumably due to the concurrency issues in implementing a fully-consistent
-range scan (weakly-consistent range scans could be implemented in the data
-structure with very little modification), although interestingly enough
-the PMA variant of B-tree (discussed in Section \ref{sec:pma}) does
-cover range scans. 
+
+The operations supported by the exponential CO B-tree are \Search{} and
+\Insert{}. The authors do not discuss range-queries, and this is presumably
+due to the concurrency issues in implementing a fully-consistent range scan
+(weakly-consistent range scans could be implemented in the data structure with
+very little modification), although interestingly enough the PMA variant of
+B-tree (discussed in Section \ref{sec:pma}) does cover range scans.
 
 \Search{} works as follows. For a non-leaf node, first check the
-\textit{right-link} key. If the \textit{right-link} key is less than
-$k$, then traverse the right link, and recurse. Otherwise, follow
-the appropriate child pointer. When a leaf node is reached, only
-follow \textit{right-link} pointers, until either $k$ has been located
-or some element greater than $k$ is reached. No locks are acquired
-during the entire search operation.
+\textit{right-link} key. If the \textit{right-link} key is less than $k$, then
+traverse the right link, and recurse. Otherwise, follow the appropriate child
+pointer. When a leaf node is reached, only follow \textit{right-link}
+pointers, until either $k$ has been located or some element greater than $k$
+is reached. No locks are acquired during the entire search operation.
 
 \Insert{} works as follows. First, \Search{} is used to locate the leaf node
 where $k$ will be inserted into. A lock is acquired on that node, $k$ is
 inserted, and the lock is released. Unlike a standard B-tree, there is no
-maximum number of elements in a node; instead we split nodes probabilistically.
-With probability ${1}/{2^{\alpha^h}}$, a node at height $h$ is split (leaf
-nodes have $h = 0$). A split works as follows.  We reacquire a lock on the node
-to be split. We split the node into $u$ and $u'$, where $u$ contains all the
-keys $< k$, and $u'$ contains the keys $\geq k$. We release the lock, and
-recursively insert $k$ into the parent of the split node. It is important
-to note that, since $u$ contains a prefix of the original node to be split,
-that we reuse the original node in constructing $u$ (that way, concurrent
-searches can still locate the keys in $u$).
+maximum number of elements in a node; instead we split nodes
+probabilistically. With probability ${1}/{2^{\alpha^h}}$, a node at height $h$
+is split (leaf nodes have $h = 0$). A split works as follows. We reacquire a
+lock on the node to be split. We split the node into $u$ and $u'$, where $u$
+contains all the keys $< k$, and $u'$ contains the keys $\geq k$. We release
+the lock, and recursively insert $k$ into the parent of the split node. It is
+important to note that, since $u$ contains a prefix of the original node to be
+split, that we reuse the original node in constructing $u$ (that way,
+concurrent searches can still locate the keys in $u$).
 
 %TODO: some section about linearizability?
 
 \subsubsection{Complexity}
+
 Sequential search takes $O(\log_B{N} + \log_{\alpha}{\log_2{B}})$ block
 transfers (with high probability). The probabilistic bound comes from the
 probabilistic key promotion property. The intuition behind the proof of this
 bound comes from the argument that when the tree has height $h =
-\Omega(\log_{\alpha}{\log_2{\log_2{N}}})$, then the total number of keys in the
-tree is $O(2^{\alpha^h})$. The proof is then completed by summing over the
+\Omega(\log_{\alpha}{\log_2{\log_2{N}}})$, then the total number of keys in
+the tree is $O(2^{\alpha^h})$. The proof is then completed by summing over the
 range of $h$ which is probabilistic $O(\log_{\alpha}{\log_2{N}})$, the access
 time from some level $h$ to find the correct child.
 
 Sequential insert takes $O(\log_B{N} + \log{\alpha}{\log_2{B}})$ block
-transfers (in expectation). This proof is constructed in a similar 
-fashion as the search proof: consider inserting a tree at some height $h$.
-By noting that the probability a particular node reaches height $h$
-is $2^{-(\alpha^h-1)/(\alpha-1)}$, a summation over all levels
-of the cost of rebuilding a node yields the time-bound.
+transfers (in expectation). This proof is constructed in a similar fashion as
+the search proof: consider inserting a tree at some height $h$. By noting that
+the probability a particular node reaches height $h$ is
+$2^{-(\alpha^h-1)/(\alpha-1)}$, a summation over all levels of the cost of
+rebuilding a node yields the time-bound.
 
 \subsection{Packed Memory Array CO B-tree}
 \label{sec:pma}
-The PMA CO B-tree is a two level data structure, containing a static
-CO B-tree which indexes into a packed-memory array. Bender introduces
-a new packed-memory array, called a \textit{one-way packed-memory array},
-which they argue is easier to manage concurrently.
+
+The PMA CO B-tree is a two level data structure, containing a static CO B-tree
+which indexes into a packed-memory array. Bender introduces a new
+packed-memory array, called a \textit{one-way packed-memory array}, which they
+argue is easier to manage concurrently.
 
 \subsubsection{One-Way PMA Primer}
 
@@ -818,54 +1035,58 @@ A one-way packed-memory array is a contiguous memory structure which has three
 distinct regions: a leftmost region of empty space, an \textit{active region}
 which contains the elements of the array, and a rightmost region of empty
 space. The array only grows into the rightmost region, and shrinks from the
-leftmost region (hence one-way).  The PMA is of size $m = \Theta(N)$, subject
+leftmost region (hence one-way). The PMA is of size $m = \Theta(N)$, subject
 to $m$ being a power of $2$, where $N$ is the number of elements.
 
-When the \textit{active region} becomes too large/small due to inserts/deletes,
-the PMA is rebalanced. A new array is allocated, and the elements are
-spread out evenly over the new array (too minimize element density).
+When the \textit{active region} becomes too large/small due to
+inserts/deletes, the PMA is rebalanced. A new array is allocated, and the
+elements are spread out evenly over the new array (too minimize element
+density).
 
 Each leaf in the static CO B-tree used is a pointer into a $\Theta(\log
-N)$-size region in the packed-memory array. 
+N)$-size region in the packed-memory array.
 
 \subsubsection{Operations}
 
-\Search{} works as follows. Search the static tree for $k$ until
-a leaf node is reached. Follow the leaf node pointer into the PMA.
-Scan right in the PMA until either $k$ is located, or some element
-$> k$ is reached. Do not acquire any locks during the search.
+\Search{} works as follows. Search the static tree for $k$ until a leaf node
+is reached. Follow the leaf node pointer into the PMA. Scan right in the PMA
+until either $k$ is located, or some element $> k$ is reached. Do not acquire
+any locks during the search.
 
-\Insert{} works as follows. Use \Search{} to locate the $\Theta(\log N)$-region
-of the PMA which (would) contain $k$. Lock the region, and scan right to find
-the appropriate slot $s$ to place $k$ into. $s$ is defined such that slot $s -
-1$ contains the largest key smaller than $k$. If scanning forward requires
-going into the next $\Theta(\log N)$-region, lock the next region and release
-the current region (\textit{hand-over-hand} locking technique). Once $s$
-is located, either $s$ is free, in which case just insert $k$, or $s$ is not free,
-in which case a \textit{rebalance} operation is required.
+\Insert{} works as follows. Use \Search{} to locate the $\Theta(\log
+N)$-region of the PMA which (would) contain $k$. Lock the region, and scan
+right to find the appropriate slot $s$ to place $k$ into. $s$ is defined such
+that slot $s - 1$ contains the largest key smaller than $k$. If scanning
+forward requires going into the next $\Theta(\log N)$-region, lock the next
+region and release the current region (\textit{hand-over-hand} locking
+technique). Once $s$ is located, either $s$ is free, in which case just insert
+$k$, or $s$ is not free, in which case a \textit{rebalance} operation is
+required.
 
 To do a rebalance operation, we scan right (locking as necessary) until the
 region from $s$ to the current position $s'$ is not \textit{too dense}. The
-notion of density is defined in detail in \cite{BenderFiGi05}. The region
-$[s, s']$ is then rebalanced as follows. Start from the rightmost element,
-and move elements to the right (maintaining order) such that no suffix of
-$[s, s']$ is too dense. This rebalancing creates room for $k$; we insert $k$
-and then release the locks.
+notion of density is defined in detail in \cite{BenderFiGi05}. The region $[s,
+s']$ is then rebalanced as follows. Start from the rightmost element, and move
+elements to the right (maintaining order) such that no suffix of $[s, s']$ is
+too dense. This rebalancing creates room for $k$; we insert $k$ and then
+release the locks.
 
 \subsubsection{Complexity}
 
 % TODO: can somebody check this time-bound? seems kind of bad
-Sequential search time-bounds are not presented in the paper,
-but presumably since search is a static CO tree lookup followed
-by a scan, the time bound is $O(\log_{B}{N} + {\log_2{N}}/{B} + 1)$.
 
-Sequential insert is $O(\log_{B}{N} + \log_2^2{N}/{B} + 1)$. The proof
-is based off an accounting argument which places $\Theta(\log_2^2{m}/B)$
-dollars in each array slot. The proof is not presented in any detail in the
-paper, but rather it is a slightly-modified version of the proof presented
-in \cite{Katriel02}. 
+Sequential search time-bounds are not presented in the paper, but presumably
+since search is a static CO tree lookup followed by a scan, the time bound is
+$O(\log_{B}{N} + {\log_2{N}}/{B} + 1)$.
+
+Sequential insert is $O(\log_{B}{N} + \log_2^2{N}/{B} + 1)$. The proof is
+based off an accounting argument which places $\Theta(\log_2^2{m}/B)$ dollars
+in each array slot. The proof is not presented in any detail in the paper, but
+rather it is a slightly-modified version of the proof presented in
+\cite{Katriel02}.
 
 \subsubsection{Lock-free Variant}
+
 The lock-free variant is based on the PMA CO tree, except the locks acquired
 during the PMA modification are replaced by augmenting each element in the PMA
 with a marker. A marker is used to denote the ongoing (concurrent) operation
@@ -882,12 +1103,13 @@ all work in a non-blocking manner (they can fail at any point).
 
 The concurrency protocol works as follows. Any of the non-blocking primitives
 are initiated by denoting the cell in question with the marker. If a process
-ever encounters a cell with a marker, it drops what it is doing and first helps
-to complete the operation. When the originating process gets context-switched
-back in, any SCs will fail, and then the process can check to see if the
-operation was already completed. The implementation of the non-blocking
-primitives is spelled out in more detail in \cite{BenderFiGi05}, but the basic
-idea is using LL/SC to detect when concurrent operations are on-going.
+ever encounters a cell with a marker, it drops what it is doing and first
+helps to complete the operation. When the originating process gets
+context-switched back in, any SCs will fail, and then the process can check to
+see if the operation was already completed. The implementation of the
+non-blocking primitives is spelled out in more detail in \cite{BenderFiGi05},
+but the basic idea is using LL/SC to detect when concurrent operations are
+on-going.
 
 \subsubsection{Lock-free Variant Operations}
 
@@ -895,13 +1117,13 @@ idea is using LL/SC to detect when concurrent operations are on-going.
 
 \Insert{} is modified as follows. Cell $s$ is located as before. A
 \textit{cell-insertion} operation is performed on $s$. If it succeeds, we are
-done. If it fails, then a rebalance is necessary. Rebalance proceeds as before,
-scanning right to find the region $[s, s']$. However, whenever a non-empty cell
-is encountered, a load-link (LL) is performed on the cell.  Once the region is
-found, the rebalancing-to-the-right is performed as before.  However, a
-store-conditional (SC) is performed on the destination of each cell.  If any SC
-fails, then this means concurrent modification had occurred, in which case the
-algorithm restarts from the beginning.
+done. If it fails, then a rebalance is necessary. Rebalance proceeds as
+before, scanning right to find the region $[s, s']$. However, whenever a
+non-empty cell is encountered, a load-link (LL) is performed on the cell. Once
+the region is found, the rebalancing-to-the-right is performed as before.
+However, a store-conditional (SC) is performed on the destination of each
+cell. If any SC fails, then this means concurrent modification had occurred,
+in which case the algorithm restarts from the beginning.
 
 \section{Conclusion}
 Fill this in.

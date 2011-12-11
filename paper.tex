@@ -384,7 +384,15 @@ $O(log_B N)$ memory transfers for searches, matching the performance of
 ordinary, cache-aware, B-trees.
 
 \section{Variable Length Strings}
+\begin{figure}
 
+\begin{center}
+	\includegraphics[width=0.8\columnwidth]{figures/COSB-treegeneralstructurediagram.pdf}
+\end{center}
+
+\caption{An illustration of the dynamic COSB-tree structure}
+\label{fig:string_structure}
+\end{figure}
 \subsection{Motivation}
 In order for B-trees to remain versatile, they must be able to accommodate various forms of data. However, traditional B-trees and string B-trees have suboptimal performance when variable length strings are used as keys. In addition, string B-trees do not support compression, and commonly used front compression is handled sub-optimally. Regular B-trees and string B-trees are not cache oblivious, and thus incur poorer performance as described previously. Range queries have poor performance in B-trees. In \cite{BenderFaKu06}, Bender et al. address these issues by designing a Cache Oblivious String B-tree (COSB-tree), which they argue works efficiently in these problem areas for variable length string keys. They also provide a modified front-compression scheme, which gives their approach the advantages of using less space and having improved locality within the compressed data.
 
@@ -401,6 +409,15 @@ The centroid tree on a high level behaves similarly for static and dynamic COSB-
 In the following subsections, centroid trees are explained, and a summary of how to modify them to preserve balance and structure in the dynamic case is provided. Two iterations on forward compression are also summarized to show how to incrementally add support for variable length strings as keys for dynamic COSB-trees.
 
 \subsubsection{The Dictionary Matching Problem and Centroid Trees} %todo:cite dictionary matching problem--sources in cosb-tree paper
+\begin{figure}
+
+\begin{center}
+	\includegraphics[width=0.8\columnwidth]{figures/centroidtreeexample.pdf}
+\end{center}
+
+\caption{A centroid tree example}
+\label{fig:centroid}
+\end{figure}
 In this approach to solving the dictionary matching problem *cite dictionary matching problem paper*, a dictionary $D$ of $N$ keys is preprocessed using hashing and divide-and-conquer via the construction of a centroid tree over the keys. This technique forms the basis for the Cache Oblivious String B-tree (COSB-tree) design. Consider the compacted trie $T$ of $D$. Bender et al. observe that there exists a centroid vertex $\rho$ in $T$ such that $\rho$ has between N/3 and 2N/3 descendants, inclusive. When searching for a key $k$ in the compacted trie, you traverse the tree as follows: for each node $y$ that you visit, if $y$ is a prefix of $x$, or $y$ matches $x$, continue on into the trie rooted at $y$ or \emph{down trie} of $y$. Otherwise traverse the trie resulting from excluding $y$ and its subtree. The \emph{centroid tree} is obtained by rooting the tree at \emph{centroid vertex} $\rho$, and making its children recursively defined centroid trees of its up and down tries. 
 
 At each step through the centroid tree, a consistent fraction of the nodes are eliminated from the search, resulting in an $O(logN)$ time bound when ignoring the time required to operate on keys. To make key comparisons faster, the keys are hashed and hash values are compared in place of the original key values. To avoid mismatches due to overlap in hash values, the original key values are compared after finding a match in hash values. The resulting time bound for \Search{} (interchangeable with \Member{}) is $O(||k||+\log{}N)$. If each node in the centroid tree knows its successor and predecessor descendants, \Pred{} and \Succ{} can be achieved in $O(||k||+||k'||+logN)$, where $k'$ is the successor or predecessor of $k$. Note that the additive $logN$ incurred by the use of centroid trees can be avoided when using main memory. Centroid trees are used to capitalize on locality for the cache oblivious string B-tree design, described later in this section.

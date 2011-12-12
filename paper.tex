@@ -390,35 +390,29 @@ various forms of data. However, traditional B-trees and string B-trees have
 suboptimal performance when variable length strings are used as keys. In
 addition, string B-trees do not support compression, and commonly used front
 compression is handled sub-optimally. Regular B-trees and string B-trees are
-not cache oblivious, and thus incur poorer performance as described
-previously. Range queries have poor performance in B-trees. In
-\cite{BenderFaKu06}, Bender et al. address these issues by designing a Cache
-Oblivious String B-tree (COSB-tree), which they argue works efficiently in
-these problem areas for variable length string keys. They also provide a
-modified front-compression scheme, which gives their approach the advantages
-of using less space and having improved locality within the compressed data.
-
-\subsection{Description}
-Bender et al. perform 2 experiments in \cite{BenderFaKu06}, in which a regular B-tree implementation tuned to various block sizes is compared to a static COSB-tree implementation. The experiment involved measuring the amount of time required to perform: 440,000 and 450,000 inserts of random values, a range query of all values, and 1000 random searches. The results of the experiment show that COSB-trees
-outperformed B-trees most of the time for random searches, range queries and
-random inserts. However, some point between 440,000 and 450,000 inserts the
-COSB-tree had to rebalance the entire tree, causing it to fall behind in this
-measurement. However, Bender et al. argue that the experiment was biased
-towards the B-tree implementation, since the trees are "young", and thus still
-well organized. The COSB-tree implementation is also compared to Berkeley DB
-\cite{BerkeleyDB}, and achieves performance comparable to Berkeley DB with
-tuned parameters. The results seem to show that there is a window in which
-large and small-block size B-trees perform poorly, and that COSB-trees may be
-a reasonable alternative to improve performance. 
+not cache oblivious, and thus incur poorer performance as described previously.
+In \cite{BenderFaKu06}, Bender et al. address these issues by designing a Cache
+Oblivious String B-tree (COSB-tree), which they argue works efficiently for
+variable length string keys. They also provide a modified front-compression
+scheme, which gives their approach the advantages of using less space and
+having improved locality within the compressed data.
 
 \subsubsection{General COSB-tree Structure}
 
-The Dynamic COSB-tree consists of 3 major components: a centroid tree at the
-top; a PMA structure of hash data for the keys known as
-the \emph{hashdata} layer; and on the bottom a PMA structure for the original
-key values, compressed using an augmented version of forward compression known as the \emph{keydata} layer. Each leaf of the centroid tree contains a pointer into the hashdata array. The centroid tree only contains a subset of the keys, so each leaf points to the respective \emph{neighborhood} of the key being searched for. After traversing the centroid tree and following the pointer into the hashdata array layer, we are within $O(\log{}N)$ keys of $k$. Then a sequential scan is performed in the hashdata array layer to find $k$. Each entry in the hashdata array contains the hash value of the corresponding key, and a pointer to the compressed key value in the keydata layer.
+The dynamic COSB-tree consists of three major components: a centroid tree at
+the top, a PMA structure of hash data for the keys known as the \emph{hashdata}
+layer; and on the bottom a PMA structure for the original key values,
+compressed using an augmented version of forward compression known as the
+\emph{keydata} layer. Each leaf of the centroid tree contains a pointer into
+the hashdata array. The centroid tree only contains a subset of the keys, so
+each leaf points to the respective \emph{neighborhood} of the key being
+searched for. After traversing the centroid tree and following the pointer into
+the hashdata array layer, we are within $O(\log{}N)$ keys of $k$. Then a
+sequential scan is performed in the hashdata array layer to find $k$. Each
+entry in the hashdata array contains the hash value of the corresponding key,
+and a pointer to the compressed key value in the keydata layer.
 
-In the following subsections, centroid trees are explained, and a summary of
+In the following sections, centroid trees are described, and a summary of
 how to modify them to preserve balance and structure in the dynamic case is
 provided. Two iterations on forward compression are also summarized to show
 how to incrementally add support for variable length strings as keys for
@@ -435,80 +429,104 @@ dynamic COSB-trees.
 \label{fig:centroid}
 \end{figure}
 
-COSB-trees are a solution to the dictionary matching problem. Dictionary matching, or string matching, refers to matching strings using prefix search. Let $D$ be a dictionary of $N$ keys. To perform faster searches, the keys in $D$ are preprocessed using hashing and divide-and-conquer via centroid trees. Figure \ref{fig:centroid} depicts an example centroid tree.
+COSB-trees are a solution to the \textit{dictionary matching problem}.
+Dictionary matching, or string matching, refers to matching strings using
+prefix search. Let $D$ be a dictionary of $N$ keys. To perform faster searches,
+the keys in $D$ are preprocessed using hashing and divide-and-conquer via
+centroid trees. Figure \ref{fig:centroid} depicts an example centroid tree.
 
-Consider the compacted\footnote{where compacted means all non-branching paths are reduced to edges.} trie $T$ constructed over $D$ for string matching.
-Consider the vertex $\rho$ in $T$ such that $\rho$ has
-between N/3 and 2N/3 descendants, inclusive. Call $\rho$ the \emph{centroid vertex} of $T$. When searching for a key $k$ in
-the compacted trie, you traverse the trie as follows: for each node $y$ that
-you visit, if $y$ is a prefix of $x$, or $y$ matches $x$, continue on into the
-trie rooted at $y$ or \emph{down trie} of $y$. Otherwise traverse the trie
-resulting from excluding $y$ and its subtree. The \emph{centroid tree} is
+Consider the compacted\footnote{Compacted means all non-branching paths are
+reduced to edges.} trie $T$ constructed over $D$ for string matching.  Consider
+the vertex $\rho$ in $T$ such that $\rho$ has between N/3 and 2N/3 descendants,
+inclusive. Call $\rho$ the \emph{centroid vertex} of $T$. When searching for a
+key $k$ in the compacted trie, you traverse the trie as follows: for each node
+$y$ that you visit, if $y$ is a prefix of $x$, or $y$ matches $x$, continue on
+into the trie rooted at $y$ or \emph{down trie} of $y$. Otherwise traverse the
+trie resulting from excluding $y$ and its subtree. The \emph{centroid tree} is
 obtained by rooting the tree at the centroid vertex $\rho$, and making its
 children recursively defined centroid trees of its up and down tries. 
 
-The centroid tree in the COSB-tree is layed out in memory using a modified van Emde Boas (vEB) layout for
-weight-balanced binary trees. The \emph{hyperhyperfloors} of nodes are used as
-a guide for cutting the tree into equal-size subtrees for the vEB layout. The
-\emph{hyperhyperfloor} of x is denoted as $\lhyperfloor{}x\rhyperfloor{}$, and
-refers to rounding x down to the nearest power of a power of 2. This ensures
-trees of equal size on all \emph{levels of detail}, as the centroid tree is
-traversed.
+The centroid tree in the COSB-tree is layed out in memory using a modified van
+Emde Boas (vEB) layout for weight-balanced binary trees. The
+\emph{hyperhyperfloors} of nodes are used as a guide for cutting the tree into
+equal-size subtrees for the vEB layout. The \emph{hyperhyperfloor} of x is
+denoted as $\lhyperfloor{}x\rhyperfloor{}$, and refers to rounding x down to
+the nearest power of a power of 2. This ensures trees of equal size on all
+\emph{levels of detail}, as the centroid tree is traversed.
+% Should explain what "level of detail" means here
 
-The following approach is used to rebalance the centroid tree: Put all the
-elements in DFS or Euler tour order for the compacted trie. Given this order, scan the trie to identify the centroid vertex. Then partition the trie into its respective
-up and down tries, and recurse on the up and down tries. The Euler tour order
-can be found in $O(\log{}N)$ scans, since the trie is only $O(\log{}N)$
-deep. Thus these updates have amortized cost of $O(1+\log^{2}N/B)$ memory transfers.
+The following approach is used to rebalance the centroid tree: put all the
+elements in DFS or Euler tour order for the compacted trie. Given this order,
+scan the trie to identify the centroid vertex. Then partition the trie into its
+respective up and down tries, and recurse on the up and down tries. The Euler
+tour order can be found in $O(\log{N})$ scans, since the trie is only
+$O(\log{N})$ deep. Thus these updates have amortized cost of
+$O(1+(\log^{2}{N})/B)$ memory transfers.
 
 The following approach is used for maintaining the vEB layout of the centroid
-tree in the COSB-tree: first, weight balance is relaxed from a
-maximum weight difference of 2 between left and right subtrees, to a larger
-constant $c$. Thus a node $v$ only becomes out of balance every
-$\Omega(\textsc{weight(v)})$ insertions or deletions of descendants of v. The nodes are stored in a PMA, preserving order of the nodes using $\Theta(N)$space.
+tree in the COSB-tree: first, weight balance is relaxed from a maximum weight
+difference of 2 between left and right subtrees, to a larger constant $c$. Thus
+a node $v$ only becomes out of balance every $\Omega(\textsc{weight(v)})$
+insertions or deletions of descendants of $v$. The nodes are stored in a PMA,
+preserving order of the nodes using $\Theta(N)$ space.
 
-On insert or delete, the area around the update point is scanned for sections of the array to rearrange. If a section around the update point reaches a certain "density" threshold, the nodes are evenly
-distributed across the section to make room for more nodes. To
-ensure that updating pointers isn't too expensive, any node included in the
-section must have all of its subtrees included. The subtrees are dictated by the vEB layout, and subtrees are chosen from the bottom up. The smallest neighboring trees (single nodes) in the vEB layout are added first, and larger trees are included when all of their subtrees have been added to the section. Root trees are only added after all bottom trees are added (in terms of the vEB layout). Figure \ref{fig:centroid_relayout} gives an example of how subtrees are chosen for rearranging.
+On insert or delete, the area around the update point is scanned for sections
+of the array to rearrange. If a section around the update point reaches a
+certain \textit{density} threshold, the nodes are evenly distributed across the
+section to make room for more nodes. To ensure that updating pointers is not too
+expensive, any node included in the section must have all of its subtrees
+included. The subtrees are dictated by the vEB layout, and subtrees are chosen
+from the bottom up. The smallest neighboring trees (single nodes) in the vEB
+layout are added first, and larger trees are included when all of their
+subtrees have been added to the section. Root trees are only added after all
+bottom trees are added (in terms of the vEB layout). Figure
+\ref{fig:centroid_relayout} gives an example of how subtrees are chosen for
+rearranging.
 
-This approach
-results in an amortized update cost of $O(1+(\log{}N)/B)$ memory transfers per
-update. In conjunction with the cost of rebuilds described above, this is only
-an additive $O(\log{}N/B)$ factor, so the overall bound is amortized
-$O(1+\log^{2}N/B)$ memory transfers.
+This approach results in an amortized update cost of $O(1+(\log{N})/B)$ memory
+transfers per update. In conjunction with the cost of rebuilds described above,
+this is only an additive $O((\log{N})/B)$ factor, so the overall bound is
+amortized $O(1+(\log^{2}N)/B)$ memory transfers.
 \begin{figure}
 
 \begin{center}
 	\includegraphics[width=0.8\columnwidth]{figures/centroidrelayoutexample.pdf}
 \end{center}
 
-\caption{A centroid layout example. Assume the smallest subtrees in this example only contain a single node. Suppose a node was inserted into a leaf position in the bottom left of the tree. The numbers represent the order in which each subtree is added to the section to be rearranged.}
+\caption{A centroid layout example. Assume the smallest subtrees in this
+example only contain a single node. Suppose a node was inserted into a leaf
+position in the bottom left of the tree. The numbers represent the order in
+which each subtree is added to the section to be rearranged.}
 \label{fig:centroid_relayout}
 \end{figure}
+
 \subsubsection{Modifying Front Compression to Preserve Locality}
 
 This section provides a brief summary of how front compression is modified to
-optimize compression and decoding for dynamic COSB-trees. Consider a sequence of $j$ keys to store $k_{1}$, $k_{2}$,
-..., $k_{j}$. Without compression, this requires $\sum_{j}||k_{j}||$ space in
-memory. To compress these keys using standard front compression, let $\pi_{j}$ be the
-longest common prefix between $k_{j}$ and $k_{j+1}$. Now instead we store the
-keys in the following format:
-
-\begin{center}
-$k_{1}$,$||\pi_{2}||$,$\sigma_{2}$,$||\pi_{3}||$$\sigma_{3}$,...,$||\pi_{j}||$,$\sigma_{j}$
-\end{center} 
-
+optimize compression and decoding for dynamic COSB-trees. Consider a sequence
+of $j$ keys to store $k_{1},k_{2},...,k_{j}$. Without compression, this
+requires $\sum_{j}||k_{j}||$ space in memory. To compress these keys using
+standard front compression, let $\pi_{j}$ be the longest common prefix between
+$k_{j}$ and $k_{j+1}$. Now instead we store the keys in the following format:
+\begin{equation}
+  k_{1}||\pi_{2}||\sigma_{2}||\pi_{3}||\sigma_{3}||...||\pi_{j}||\sigma_{j}
+\end{equation} 
 where $\sigma_{j}$ is the suffix of $k_{j}$ after removing the first $\pi_{j}$
 bits. This saves almost $\sum_{j}||\pi_{j}||$ memory. However, since decoding
 $k_{j}$ involves concatenating the first $\pi_{j}$ bits of $k_{j-1}$ to
 $\sigma_{j}$, $k_{j-1}$ must be decoded. $k_{j-1}$ may depend on previous keys
 as well, making $k_{j}$ expensive to decode.
 
-Bender et al. provide a modification that reduces the high decoding cost of front compressing D to $O(1+||k||B)$, while maintaining a compressed size of $O(\llangle{D}\rrangle{})$\footnote{$\llangle{D}\rrangle{}$ is shorthand for the size of $D$ after front compression} after compression. The modification works as follows: Let $c = 2 + \epsilon/2$, and let $k_{1}$ be
-the first key added to the compression stream. For each subsequent key
-$k_{i}$, if $k_{i}$ can be decoded with just the last $c||k_{i}||$ characters,
-add $\pi_{i}$,$\sigma_{i}$ as described above. Otherwise, add $k_{i}$ to the stream without compressing it. By construction, this scheme guarantees that any key $k_{j}$ can be decoded in $O(1+||k||B)$ memory transfers.
+Bender et al. provide a modification that reduces the high decoding cost of
+front compressing $D$ to $O(1+||k||B)$, while maintaining a compressed size of
+$O(\llangle{D}\rrangle{})$\footnote{$\llangle{D}\rrangle{}$ is shorthand for
+the size of $D$ after front compression} after compression. The modification
+works as follows: Let $c = 2 + \epsilon/2$, and let $k_{1}$ be the first key
+added to the compression stream. For each subsequent key $k_{i}$, if $k_{i}$
+can be decoded with just the last $c||k_{i}||$ characters, add
+$\pi_{i}$, $\sigma_{i}$ as described above. Otherwise, add $k_{i}$ to the stream
+without compressing it. By construction, this scheme guarantees that any key
+$k_{j}$ can be decoded in $O(1+||k||B)$ memory transfers.
 
 However, the above modification falls short for anticipating insertions and
 deletions. The previous modification relies on each key being decoded within
@@ -523,11 +541,11 @@ prefixes. Suppose a key $k$ is being inserted. If keys further down in the array
 %todo: figure out how to do range queries from this paper somehow...
 
 The operations supported by the COSB-tree are: \Search{} (synonymous with \Member{}), \Pred{}, \Succ{},
-and \Range{}. The behavior of each operation for dynamic COSB-trees is
+and \Scan{}. The behavior of each operation for dynamic COSB-trees is
 described below. \Insertkonly{} and \Delete{} are also supported but not
 described here.
 
-\Search{}: works as follows for a given key $k$. Compute the hash value for
+\Search{} works as follows for a given key $k$. Compute the hash value for
 $k$ and call it $\rho$, and traverse the centroid tree of the COSB-tree using
 $\rho$ to obtain the successor $\rho_{s}$ and predecessor $\rho_{p}$ of $k$.
 Index into the hashdata layer and perform a sequential scan across the PMA
@@ -536,36 +554,71 @@ $\rho'$, index into the keydata layer and decode $\rho'$ to obtain the
 resulting key $k'$. If $k' = k$, return true. If $k' \ne k$ or $k$ was not
 found during the sequential scan return false.
 
-\Pred{},\Succ{}: works in the same way as \Search{} until the sequential scan
-in the hashdata layer. When scanning the hashdata layer, look for $\rho_{p}$
-or $\rho_{s}$, respectively, in place of $\rho$, and compare the appropriate
-keys in the keydata layer.
+\Pred{}, \Succ{} work in the same way as \Search{} until the sequential scan in
+the hashdata layer. When scanning the hashdata layer, look for $\rho_{p}$ or
+$\rho_{s}$, respectively, in place of $\rho$, and compare the appropriate keys
+in the keydata layer.
 
-\Range{}: This operation is not explicitly described in \cite{BenderFaKu06}, but presumably this is very similar to
-\Search{}. Let $k_{b}$ be the beginning of the range and let $k_{e}$ be the
-end of the range. Hash the range keys and identify the predecessor of
-$\rho_{b}$ and the successor of $\rho_{e}$ using the centroid tree. Scan the
-hashdata layer across from $\rho_{b,p}$ to $\rho_{e,s}$. Only start noting the
-beginning of range when the first key with hash value after $\rho_{b}$, and
-stop once we reach the first key with hash value after $\rho_{e}$. Decode and
-return the set of keys within the given range in the keydata layer.
+\Scan{}: This operation is not explicitly described in \cite{BenderFaKu06}, but
+presumably this is very similar to \Search{}. Let $k_{b}$ be the beginning of
+the range and let $k_{e}$ be the end of the range. Hash the range keys and
+identify the predecessor of $\rho_{b}$ and the successor of $\rho_{e}$ using
+the centroid tree. Scan the hashdata layer across from $\rho_{b,p}$ to
+$\rho_{e,s}$. Only start noting the beginning of range when the first key with
+hash value after $\rho_{b}$, and stop once we reach the first key with hash
+value after $\rho_{e}$. Decode and return the set of keys within the given
+range in the keydata layer.
 
 \subsection{Complexity}
-The keys in are hashed and hash values are compared in place of the original key values to speed up comparisons in the centroid tree and hashdata layer. To avoid mismatches due to overlapping hash values, the original key values are compared only once at the bottom layer, resulting an additive $O(||k||/B)$ memory transfers in each of the operators for each key $k$ that needs to be compared.
+The keys are hashed and hash values are compared in place of the original key
+values to speed up comparisons in the centroid tree and hashdata layer. To
+avoid mismatches due to hash collisions, the original key values are compared
+only once at the bottom layer, resulting an additive $O(||k||/B)$ memory
+transfers in each of the operators for each key $k$ that needs to be compared.
 
-\Search{} takes $O(1+\log_{B}N+||k||/B)$ memory transfers with high
-probability (w.h.p.).  The centroid tree is stored in a PMA with a dynamic CO layout. This layout reduces the number of memory transfers required when traversing the tree to $O(log_{B}N)$.  Once in the hashdata layer, we are already within $O(logN)$ keys of $k$, which require $O(\log{}N)/B)$ memory transfers to scan. Decoding and comparing the original key values requires $O(1+||k||/B)$ memory transfers, due to the modified front compression scheme.
+\Search{} takes $O(1+\log_{B}N+||k||/B)$ memory transfers with high probability
+(w.h.p.).  The centroid tree is stored in a PMA with a dynamic CO layout. This
+layout reduces the number of memory transfers required when traversing the tree
+to $O(\log_{B}{N})$.  Once in the hashdata layer, we are already within $O(\log{N})$
+keys of $k$, which require $O((\log{N})/B)$ memory transfers to scan. Decoding
+and comparing the original key values requires $O(1+||k||/B)$ memory transfers,
+due to the modified front compression scheme.
 
-The \Pred{} and \Succ{} operations are similar in behavior to searches, and thus only have the added cost of having to operate on $k'$, where $k'$ is the predecessor or successor, respectively. These operations as a result take $O(1+\log_{B}N+||k||/B+||k'||/B)$ memory transfers w.h.p.. Similarly, range queries take
-$O(1+\log_{B}N+(||k||+||k'||+\llangle{}Q\rrangle{})/B)$ memory transfers,
-where in this case $k'$ is the other end of the range and $Q$ is the set of
-keys within the given range.
+The \Pred{} and \Succ{} operations are similar in behavior to searches, and
+thus only have the added cost of having to operate on $k'$, where $k'$ is the
+predecessor or successor, respectively. These operations as a result take
+$O(1+\log_{B}N+||k||/B+||k'||/B)$ memory transfers (w.h.p.). Similarly, range
+queries take $O(1+\log_{B}N+(||k||+||k'||+\llangle{}Q\rrangle{})/B)$ memory
+transfers, where in this case $k'$ is the other end of the range and $Q$ is the
+set of keys within the given range.
 
 \Insertkonly{} and \Delete{} w.h.p. require $O(1+\log_{B}N+\log^{2}N||k||/B)$
 memory transfers. As mentioned previously, due to rebuilds updates have
 amortized cost of $O(1+(\log^{2}N)/B)$ memory transfers. The rest of the cost
 for insertions and deletions is due to having to find the correct key to
 delete or location for insert, which can be seen from the cost of \Search{}.
+
+\subsection{Experimental Results}
+Bender et al. perform two experiments in \cite{BenderFaKu06}, in which a
+regular B-tree implementation tuned to various block sizes is compared to a
+static COSB-tree implementation. The experiment involved measuring the amount
+of time required to perform:
+\begin{inparaenum}[(a)]
+  \item 440,000 and 450,000 inserts of random values, 
+  \item a range query of all values, and 
+  \item 1000 random searches.
+\end{inparaenum} The results of the
+experiment show that COSB-trees outperformed B-trees most of the time for
+random searches, range queries and random inserts. However, some point between
+440,000 and 450,000 inserts the COSB-tree had to rebalance the entire tree,
+causing it to fall behind in this measurement. However, Bender et al. argue
+that the experiment was biased towards the B-tree implementation, since the
+trees are ``young'', and thus still well organized. The COSB-tree
+implementation is also compared to Berkeley DB \cite{BerkeleyDB}, and achieves
+performance comparable to Berkeley DB with tuned parameters. The results seem
+to show that there is a window in which large and small-block size B-trees
+perform poorly, and that COSB-trees may be a reasonable alternative to improve
+performance. 
 
 \section{Streaming B-trees}
 
@@ -995,8 +1048,8 @@ In addition, four non-blocking primitives are introduced:
   \item \textit{move},
   \item \textit{cell-insertion},
   \item \textit{cell-deletion}, and
-  \item \textit{read}
-\end{inparaenum}. These primitives are self-explanatory, except they
+  \item \textit{read}.
+\end{inparaenum} These primitives are self-explanatory, except they
 all work in a non-blocking manner (they can fail at any point, and it is
 up to the current process to restart the operation on failure).
 

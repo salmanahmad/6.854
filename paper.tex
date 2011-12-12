@@ -1063,6 +1063,23 @@ non-blocking primitives is spelled out in more detail in \cite{BenderFiGi05},
 but the basic idea is using LL/SC to detect when concurrent operations are
 on-going.
 
+\begin{figure*}[h!t]
+\begin{center}
+    \begin{tabular}{ |   l   |  l     |     l     |     }
+    \hline
+	Data Structure & Search & Insert / Delete  \\ \hline \hline
+	 \textit{Original CO B-tree}  & $O(\log_{B}{N})$ & $O(\log_{B}{N} + \frac{\log^2{N}}{B})$  \\ \hline
+	\textit{String CO B-tree}  & $O(1+\log_{B}N+||k||/B)$ &   $O(1+\log_{B}N+\log^{2}N||k||/B)$  \\ \hline
+	\textit{Streaming Shuttle Tree}  & $O(\log_{B}{N})$ &  $O(log_{B+1} N / B^{\Theta(1/(loglogB)^2)} + (log^2 N) / B)$  \\ \hline
+	\textit{Streaming COLA}  & $O(\log N)$ & $O((\log N) / B)$  \\ \hline
+	\textit{Concurrent Exponential CO B-tree} &   $O(\log_B{N} + \log_{\alpha}{\log{B}})$  &   $O(\log_B{N} + \log{\alpha}{\log{B}})$  \\ \hline
+	\textit{Concurrent PMA CO B-tree}  & $O(\log_{B}{N} + ({\log{N}})/{B} + 1)$ &   $O(\log_{B}{N} + (\log^2{N})/{B} + 1)$  \\ \hline
+    \end{tabular}
+    \caption{A summary of the surveyed CO B-trees. The bounds are in terms of the number of memory transfers. The bounds for \textit{Concurrent Exponential CO B-tree} are in expectation only.}
+    \label{fig:table}
+\end{center}
+\end{figure*}
+
 \subsubsection{Lock-free Variant Operations}
 
 \Search{} is un-modified from the lock-based version.
@@ -1078,12 +1095,20 @@ cell. If any SC fails, then this means concurrent modification had occurred,
 in which case the algorithm restarts from the beginning.
 
 \section{Conclusion}
-Fill this in.
-%\end{document}  % This is where a 'short' article might terminate
 
-%ACKNOWLEDGMENTS are optional
+
+
+This paper presented a survey on different types of cache-oblivious B-trees: the 
+original \textit{cache-oblivious B-tree}, the \textit{cache-oblivious string
+B-tree}, the \textit{cache-oblivious streaming B-tree}, and the \textit{cache-oblivious
+concurrent B-tree}. A summary of these data structures is provided
+in Figure~\ref{fig:table}.
+
+
+
 \section{Acknowledgments}
-Fill this in.
+We sincerely thank Dr. David Karger and all of the TAs for 6.854 
+for their guidance, help, and support. May the Flow (Max-Flow, that is) be with you all.
 
 %
 % The following two commands are all you need in the

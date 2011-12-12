@@ -398,12 +398,12 @@ of ordinary, cache-aware, B-trees.
 \subsection{Motivation}
 
 In order for B-trees to remain versatile, they must be able to accommodate
-various forms of data. However, traditional B-trees and string B-trees have
-suboptimal performance when variable length strings are used as keys. In
-addition, string B-trees do not support compression, and commonly used front
-compression is handled sub-optimally. Regular B-trees and string B-trees are
+various forms of data. Bender et al. assert the following weaknesses in existing string B-tree designs: traditional B-trees have
+suboptimal performance when variable length strings are used as keys\cite{BenderDemainColton}. String B-trees\cite{Ferragina98} handle variable-length strings well but do not use compression. Front compression\cite{BayerUn77,ClarkSaSt69,Comer79,Wagner73} is used in many B-trees, but is handled sub-optimally\cite{BenderFaKu06}. Regular B-trees and string B-trees are
 not cache oblivious, and thus incur poorer performance as described
-previously. Range queries have poor performance in B-trees. In
+previously by Bender et al.\cite{BenderDemainColton}. Range queries have poor performance in B-trees\cite{BenderFaKu06}. 
+
+In
 \cite{BenderFaKu06}, Bender et al. address these issues by designing a Cache
 Oblivious String B-tree (COSB-tree), which they argue works efficiently in
 these problem areas for variable length string keys. They also provide a
@@ -443,7 +443,7 @@ dynamic COSB-trees.
 	\includegraphics[width=0.8\columnwidth]{figures/centroidtreeexample.pdf}
 \end{center}
 
-\caption{A centroid tree example. Dotted lines represent centroid-rooted up tries, where the parent is not a prefix of the child. Solid lines represent centroid-rooted down tries, where the parent is a prefix of the child.}
+\caption{A centroid tree example from \cite{BenderFaKu06}. Dotted lines represent centroid-rooted up tries, where the parent is not a prefix of the child. Solid lines represent centroid-rooted down tries, where the parent is a prefix of the child.}
 \label{fig:centroid}
 \end{figure}
 

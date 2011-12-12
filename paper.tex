@@ -386,29 +386,22 @@ searches, matching the performance of static cache-aware B-trees.
 \subsection{Motivation}
 
 In order for B-trees to remain versatile, they must be able to accommodate
-various forms of data. Bender et al. assert the following weaknesses in existing string B-tree designs: traditional B-trees have
-suboptimal performance when variable length strings are used as keys\cite{BenderDemainColton}. String B-trees\cite{Ferragina98} handle variable-length strings well but do not use compression. Front compression\cite{BayerUn77,ClarkSaSt69,Comer79,Wagner73} is used in many B-trees, but is handled sub-optimally\cite{BenderFaKu06}. Regular B-trees and string B-trees are
-not cache oblivious, and thus incur poorer performance as described
-previously by Bender et al.\cite{BenderDemainColton}. Range queries have poor performance in B-trees\cite{BenderFaKu06}. 
+various forms of data. Bender et al. argue the following weaknesses in
+existing B-tree designs: 
+\begin{inparaenum}[(a)]
+  \item traditional B-trees have suboptimal performance when variable length
+  strings are used as keys \cite{BenderDemainColton},
+  \item string B-trees \cite{Ferragina98} handle variable-length strings well
+  but do not use compression, 
+  \item front compression \cite{BayerUn77,ClarkSaSt69,Comer79,Wagner73} is used
+  in many B-trees, but is handled sub-optimally \cite{BenderFaKu06}. 
+\end{inparaenum} 
 
 In \cite{BenderFaKu06}, Bender et al. address these issues by designing a Cache
-Oblivious String B-tree (COSB-tree), which they argue works efficiently in
-these problem areas for variable length string keys. They also provide a
-modified front-compression scheme, which gives their approach the advantages
-of using less space and having improved locality within the compressed data.
-
-\subsection{Description}
-Bender et al. perform 2 experiments in \cite{BenderFaKu06}, in which a regular B-tree implementation tuned to various block sizes is compared to a static COSB-tree implementation. The experiment involved measuring the amount of time required to perform: 440,000 and 450,000 inserts of random values, a range query of all values, and 1000 random searches. The results of the experiment show that COSB-trees
-outperformed B-trees most of the time for random searches, range queries and
-random inserts. However, some point between 440,000 and 450,000 inserts the
-COSB-tree had to rebalance the entire tree, causing it to fall behind in this
-measurement. However, Bender et al. argue that the experiment was biased
-towards the B-tree implementation, since the trees are "young", and thus still
-well organized. The COSB-tree implementation is also compared to Berkeley DB
-\cite{BerkeleyDB}, and achieves performance comparable to Berkeley DB with
-tuned parameters. The results seem to show that there is a window in which
-large and small-block size B-trees perform poorly, and that COSB-trees may be
-a reasonable alternative to improve performance. 
+Oblivious String B-tree (COSB-tree), which they argue works more efficiently
+for variable length string keys. They also provide a modified front-compression
+scheme, which lets their data structure use less space and have improved
+compressed data locality.
 
 \subsubsection{General COSB-tree Structure}
 
@@ -438,7 +431,10 @@ dynamic COSB-trees.
 	\includegraphics[width=0.8\columnwidth]{figures/centroidtreeexample.pdf}
 \end{center}
 
-\caption{A centroid tree example from \cite{BenderFaKu06}. Dotted lines represent centroid-rooted up tries, where the parent is not a prefix of the child. Solid lines represent centroid-rooted down tries, where the parent is a prefix of the child.}
+\caption{A centroid tree example from \cite{BenderFaKu06}. Dotted lines
+represent centroid-rooted up tries, where the parent is not a prefix of the
+child. Solid lines represent centroid-rooted down tries, where the parent is a
+prefix of the child.}
 \label{fig:centroid}
 \end{figure}
 
@@ -543,11 +539,17 @@ $k_{j}$ can be decoded in $O(1+||k||B)$ memory transfers.
 
 However, the above modification falls short for anticipating insertions and
 deletions. The previous modification relies on each key being decoded within
-$c||k||$ elements of the compressed array, but this is no longer
-guaranteed when new keys can be inserted to the left of $k$. To make the
+$c||k||$ elements of the compressed array, but this is no longer guaranteed
+when new keys can be inserted to the left of $k$. To make the
 locality-preserving front compression technique suitable for dynamic
 COSB-trees, Bender et al. modify the algorithm to include extra copied
-prefixes. Suppose a key $k$ is being inserted. If keys further down in the array will be negatively impacted, the longest common prefix between $k$ and the key right after $k$ is copied to $k$ along with $k$'s original compression data. The idea behind adding extra copied prefixes is to maintain $O(||k||)$ decode distances around the area where the new key is being inserted. The characters preceding $k$ are charged for the copied prefix, accounting for the work to add the copied prefix to $k$.
+prefixes. Suppose a key $k$ is being inserted. If keys further down in the
+array will be negatively impacted, the longest common prefix between $k$ and
+the key right after $k$ is copied to $k$ along with $k$'s original compression
+data. The idea behind adding extra copied prefixes is to maintain $O(||k||)$
+decode distances around the area where the new key is being inserted. The
+characters preceding $k$ are charged for the copied prefix, accounting for the
+work to add the copied prefix to $k$.
 
 \subsection{Operators}
 

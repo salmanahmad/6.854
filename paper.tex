@@ -543,7 +543,8 @@ which each subtree is added to the section to be rearranged.}
 \subsubsection{Modifying Front Compression}
 
 This section provides a brief summary of how front compression is modified to
-optimize compression and decoding for dynamic COSB-trees. Consider a sequence
+optimize compression and decoding for dynamic COSB-trees. This approach 
+increases the locality of the compressed data. Consider a sequence
 of $j$ keys to store $k_{1},k_{2},...,k_{j}$. Without compression, this
 requires $\sum_{j}||k_{j}||$ space in memory. To compress these keys using
 standard front compression, let $\pi_{j}$ be the longest common prefix between

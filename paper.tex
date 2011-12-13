@@ -33,11 +33,17 @@
 \usepackage{paralist}
 \usepackage{graphicx}
 \usepackage{url}
+\usepackage{amsmath}
+
+
 
 % This gets rid of the block of whitespace on the first page
 \makeatletter
 \let\@copyrightspace\relax
 \makeatother
+
+
+
 
 \begin{document}
 
@@ -256,7 +262,7 @@ length in the next two sections.
 	\includegraphics[width=0.8\columnwidth]{figures/veb.pdf}
 \end{center}
 
-\caption{An illustration of the van Emde Boas (vEB) layout}
+\caption{An illustration of the recursive van Emde Boas (vEB) layout}
 \label{fig:veb}
 \end{figure}
 
@@ -294,6 +300,7 @@ Section~\ref{sec:layout}).
 The definition of a SWBST given in \cite{swbst} provides this bound for the
 weight of a node $u$:
 \begin{equation}
+  \label{eq:bounds}
   \frac{c^{h-1}}{2} \leq w(u) \leq 2c^{h-1}
 \end{equation}
 
@@ -334,13 +341,15 @@ that the PMA is concerned with: \textit{inserts}, \textit{splits/merges}, and
 \textit{pointer updates}.
 
 First, the PMA needs to maintain open space in its memory for newly inserted
-items. The PMA is able to handle an insertion into the SWBST using only $O(1 +
+items. Doing so may seem contradictory: maintaining the locality of elements
+while keeping space available for new inserts. The achieve a balance between
+these extremes the PMA uses a technique
+described in \cite{packedmemoryarray}.
+The PMA is able to handle an insertion into the SWBST using only $O(1 +
 (\log^2{N}) / B)$ memory transfers (this is the cost of updating the memory
 layout of the SWBST in the PMA, not the cost of updating the data structure
-itself). Doing so may seem contradictory: maintaining the locality of elements
-while keeping space available for new inserts. The PMA uses a technique
-described in \cite{packedmemoryarray}. At a high level, the PMA maintains
-windows into the array. When a window becomes too full or too empty, the
+itself). At a high level, the PMA maintains
+``windows'' into the array. When a window becomes too full or too empty, the
 elements are spread out within the context of a larger window. Two parameters
 are required: the window size and the threshold for triggering a spread out.
 However, these parameters are not related to the block size of the memory level
@@ -350,7 +359,7 @@ Second, the PMA needs to handle splits and merges caused by inserting into the
 SWBST discussed in the previous section. The PMA is able to accomplish this
 using $O(1 + (\log{N}) /B)$ memory transfers. The proof is based on the fact
 that each node has $\Theta(c^h)$ descendants (recall, this is the key property
-that SWBST provided). Thus, merging or splitting a node will cause
+that SWBST provided; shown in Equation~\ref{eq:bounds}). Thus, merging or splitting a node will cause
 $\Theta(c^h)$ nodes to move, requiring $O(1 + c^h/B)$ memory transfers. It
 follows from the definition of SWBST in \cite{swbst} that when a node is
 rebalanced, it will require $\Theta(c^h)$ insertions or deletions until it is
@@ -398,25 +407,39 @@ existing B-tree designs:
 \end{inparaenum} 
 
 In \cite{BenderFaKu06}, Bender et al. address these issues by designing a Cache
-Oblivious String B-tree (COSB-tree), which they argue works more efficiently
-for variable length string keys. They also provide a modified front-compression
-scheme, which lets their data structure use less space and have improved
+Oblivious String B-tree (COSB-tree), which works more efficiently
+for variable length string keys. The COSB-tree uses a modified front-compression
+scheme, which allows it to use less space and have improved
 compressed data locality.
 
 \subsubsection{General COSB-tree Structure}
 
-The dynamic COSB-tree consists of three major components: a centroid tree at
-the top, a PMA structure of hash data for the keys known as the \emph{hashdata}
-layer; and on the bottom a PMA structure for the original key values,
-compressed using an augmented version of forward compression known as the
-\emph{keydata} layer. Each leaf of the centroid tree contains a pointer into
+The dynamic COSB-tree consists of three layers: a centroid tree, a PMA 
+of hash data for the keys (known as the 
+\emph{hashdata} layer), and a PMA of compressed values for the original key
+ (known as the 
+\emph{keydata} layer). Each leaf of the centroid tree contains a pointer into
 the hashdata array. The centroid tree only contains a subset of the keys, so
 each leaf points to the respective \emph{neighborhood} of the key being
 searched for. After traversing the centroid tree and following the pointer into
 the hashdata array layer, we are within $O(\log{}N)$ keys of $k$. Then a
 sequential scan is performed in the hashdata array layer to find $k$. Each
 entry in the hashdata array contains the hash value of the corresponding key,
-and a pointer to the compressed key value in the keydata layer.
+and a pointer to the compressed key value in the keydata layer. The keydata layer
+is consulted to resolve hash collisions in the hashdata layer.
+
+%a centroid tree at
+%the top, a PMA structure of hash data for the keys known as the \emph{hashdata}
+%layer; and on the bottom a PMA structure for the original key values,
+%compressed using an augmented version of forward compression known as the
+%\emph{keydata} layer. Each leaf of the centroid tree contains a pointer into
+%the hashdata array. The centroid tree only contains a subset of the keys, so
+%each leaf points to the respective \emph{neighborhood} of the key being
+%searched for. After traversing the centroid tree and following the pointer into
+%the hashdata array layer, we are within $O(\log{}N)$ keys of $k$. Then a
+%sequential scan is performed in the hashdata array layer to find $k$. Each
+%entry in the hashdata array contains the hash value of the corresponding key,
+%and a pointer to the compressed key value in the keydata layer.
 
 In the following sections, centroid trees are described, and a summary of
 how to modify them to preserve balance and structure in the dynamic case is
@@ -424,7 +447,7 @@ provided. Two iterations on forward compression are also summarized to show
 how to incrementally add support for variable length strings as keys for
 dynamic COSB-trees.
 
-\subsubsection{The Dictionary Matching Problem and Centroid Trees} %todo:cite dictionary matching problem--sources in cosb-tree paper
+\subsubsection{Centroid Trees} %todo:cite dictionary matching problem--sources in cosb-tree paper
 \begin{figure}
 
 \begin{center}
@@ -455,13 +478,19 @@ trie resulting from excluding $y$ and its subtree. The \emph{centroid tree} is
 obtained by rooting the tree at the centroid vertex $\rho$, and making its
 children recursively defined centroid trees of its up and down tries. 
 
-The centroid tree in the COSB-tree is layed out in memory using a modified van
-Emde Boas (vEB) layout for weight-balanced binary trees. The
+The centroid tree in the COSB-tree is layed out in memory using a modified vEB
+(see Figure~\ref{fig:veb}) layout for weight-balanced binary trees. The
 \emph{hyperhyperfloors} of nodes are used as a guide for cutting the tree into
-equal-size subtrees for the vEB layout. The \emph{hyperhyperfloor} of x is
-denoted as $\lhyperfloor{}x\rhyperfloor{}$, and refers to rounding x down to
-the nearest power of a power of 2. This ensures trees of equal size on all
-\emph{levels of detail}, as the centroid tree is traversed.
+equal-size subtrees for the vEB layout. The \emph{hyperhyperfloor} of x refers
+to rounding x down to the nearest power of a power of 2. This ensures trees
+of equal size on all \emph{levels of detail}, as the centroid tree is traversed.
+
+********* LEILANI: Can you provide a 5 word description of levels of details ***
+
+%The \emph{hyperhyperfloor} of x is
+%denoted as $\lhyperfloor{}x\rhyperfloor{}$, and refers to rounding x down to
+%the nearest power of a power of 2. This ensures trees of equal size on all
+%\emph{levels of detail}, as the centroid tree is traversed.
 % Should explain what "level of detail" means here
 
 The following approach is used to rebalance the centroid tree: put all the
@@ -471,6 +500,8 @@ respective up and down tries, and recurse on the up and down tries. The Euler
 tour order can be found in $O(\log{N})$ scans, since the trie is only
 $O(\log{N})$ deep. Thus these updates have amortized cost of
 $O(1+(\log^{2}{N})/B)$ memory transfers.
+
+********* LEILANI: What is a centroid vertex? ***
 
 The following approach is used for maintaining the vEB layout of the centroid
 tree in the COSB-tree: first, weight balance is relaxed from a maximum weight
@@ -509,7 +540,7 @@ which each subtree is added to the section to be rearranged.}
 \label{fig:centroid_relayout}
 \end{figure}
 
-\subsubsection{Modifying Front Compression to Preserve Locality}
+\subsubsection{Modifying Front Compression}
 
 This section provides a brief summary of how front compression is modified to
 optimize compression and decoding for dynamic COSB-trees. Consider a sequence
@@ -551,7 +582,7 @@ decode distances around the area where the new key is being inserted. The
 characters preceding $k$ are charged for the copied prefix, accounting for the
 work to add the copied prefix to $k$.
 
-\subsection{Operators}
+\subsection{Operations}
 
 %todo: figure out how to do range queries from this paper somehow...
 
@@ -643,7 +674,7 @@ While B-trees achieve an optimal bound for the number of memory transfers for
 search, they do not perform as well for bulk updates and insertions. The
 buffered-repository tree (BRT) is an alternative to the B-tree that achieves an
 improved amortized $O(\log{\frac{N}{B}})$ memory transfers for inserts compared
-to the $O(\log_{B}{N})$ memory access of B-trees. In practice, log-structured
+to the $O(\log_{B}{N})$ memory access of B-trees \cite{Buchsbaum}. In practice, log-structured
 merge (LSM) trees \cite{ONeil96} are used for high-insert workloads.
 
 This search vs. insertion trade-off also exists in the cache-oblivious model.
@@ -707,7 +738,7 @@ leaf.  Since the recursive subtrees are split based on the largest Fibonacci
 number less than $h$ (as described previously) it follows that the buffer sizes
 are also a function of the Fibonacci numbers.
 
-\subsubsection{Operators}
+\subsubsection{Operations}
 
 The shuttle tree supports \Search{}, \Insert{}, and \Scan{}. An explicit
 discussion on \Delete{} is missing; it is assumed that it is similar 
@@ -753,7 +784,7 @@ key trick is that when you visit a node you only search its largest buffer
 (the last buffer in the linked list for that level). The smaller buffers will
 be visited eventually as you recurse down the tree. Eventually you will get
 down to a single subtree that can fit into a single blocks and thus can be
-searched with one memory accesses. Since the fanout is proportional to the
+searched with one memory transfer. Since the fanout is proportional to the
 block size it will take us $O(\log_B N)$ block accesses until we get down to a
 subtree and thus, by induction, the worst case runtime is $O(\log_B N)$.
 
@@ -804,7 +835,7 @@ Furthermore, each array is either completely full or completely empty. As such,
 the COLA is very similar to the binomial list structure described in
 \cite{BentleySaxe}.
 
-\subsubsection{Operators}
+\subsubsection{Operations}
 
 The operations supported by COLA are \Search{}, \Insert{}, and \Scan{}. Once
 again, \Delete{} can be inferred from \Insert{}.

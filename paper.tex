@@ -781,7 +781,7 @@ amortized $O(1+(\log^{2}N)/B)$ memory transfers.
 \begin{figure}
 
 \begin{center}
-	\includegraphics[width=0.7\columnwidth]{figures/centroidrelayoutexample.pdf}
+	\includegraphics[width=0.8\columnwidth]{figures/centroidrelayoutexample.pdf}
 \end{center}
 
 \caption{A centroid layout example. Assume the smallest subtrees in this
@@ -939,7 +939,9 @@ presents a lock-free variant of the latter data structure.
 \subsection{Description}
 
 Before describing the data structures in more detail, we first consider
-the concurrency model which is used throughout \cite{BenderFiGi05}.
+the concurrency model which is used in \cite{BenderFiGi05}.
+
+\newpage
 
 \subsubsection{Concurrency Model}
 
@@ -1034,6 +1036,7 @@ access time from some level $h$ to find the correct child.
     \caption{A summary of the surveyed CO B-trees. The bounds are in terms of the number of memory transfers. The bounds for \textit{Concurrent Exponential CO B-tree} are in expectation only.}
     \label{fig:table}
 \end{center}
+\vspace{-0.2in}
 \end{figure*}
 
 Sequential insert takes $O(\log_B{N} + \log{\alpha}{\log{B}})$ block
@@ -1096,7 +1099,7 @@ elements to the right (maintaining order) such that no suffix of $[s, s']$ is
 too dense. This rebalancing creates room for $k$; we insert $k$ and then
 release the locks.
 
-\vfill
+
 
 \subsubsection{Complexity}
 
@@ -1113,7 +1116,7 @@ array slot. The proof is not presented in any detail in the paper, but rather
 the authors argue that it is simply a slightly-modified version of the proof
 presented in \cite{Katriel02}.
 
-\vfill
+
 
 \subsubsection{Lock-free Variant}
 
@@ -1146,7 +1149,7 @@ non-blocking primitives is spelled out in more detail in \cite{BenderFiGi05},
 but the basic idea is using LL/SC to detect when concurrent operations are
 on-going.
 
-\vfill
+
 
 \subsubsection{Lock-free Variant Operations}
 
@@ -1164,7 +1167,8 @@ However, a store-conditional (SC) is performed on the destination of each
 cell. If any SC fails, then this means concurrent modification had occurred,
 in which case the algorithm restarts from the beginning.
 
-\newpage
+
+\vspace{0.1in}
 
 \section{Conclusion}
 
@@ -1183,7 +1187,7 @@ in Figure~\ref{fig:table}.
 We sincerely thank Dr. David Karger and all of the 6.854 TAs
 for their guidance, help, and support.
 
-\vspace{0.1in}
+\vspace{0.15in}
 
 %%%% May the Flow (Max-Flow, that is) be with you all.
 

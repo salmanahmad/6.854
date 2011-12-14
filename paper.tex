@@ -701,11 +701,16 @@ The structure is described in Figure~\ref{fig:string_structure}.
 %entry in the hashdata array contains the hash value of the corresponding key,
 %and a pointer to the compressed key value in the keydata layer.
 
+\vfill
+
 In the following sections, centroid trees are described, and a summary of
 how to modify them to preserve balance and structure in the dynamic case is
 provided. Two iterations on forward compression are also summarized to show
 how to incrementally add support for variable length strings as keys for
 dynamic COSB-trees.
+
+
+\vfill
 
 COSB-trees are a solution to the \textit{dictionary matching problem}.
 Dictionary matching, or string matching, refers to matching strings using
@@ -713,6 +718,7 @@ prefix search. Let $D$ be a dictionary of $N$ keys. To perform faster searches,
 the keys in $D$ are preprocessed using hashing and divide-and-conquer via
 centroid trees. Figure \ref{fig:centroid} depicts an example centroid tree.
 
+\vfill
 
 Consider the compacted\footnote{Compacted means all non-branching paths are
 reduced to edges.} trie $T$ constructed over $D$ for string matching. There exists a
@@ -725,7 +731,8 @@ trie resulting from excluding $y$ and its subtree, and call this the \emph{up tr
 obtained by rooting the tree at the centroid vertex $\rho$, and making its
 children recursively defined centroid trees of its up and down tries. 
 
-\subsubsection{Centroid Trees} %todo:cite dictionary matching problem--sources in cosb-tree paper
+
+
 \begin{figure}
 \begin{center}
 	\includegraphics[width=0.8\columnwidth]{figures/centroidtreeexample.pdf}
@@ -737,6 +744,9 @@ prefix of the child.}
 \label{fig:centroid}
 \end{figure}
 
+\newpage
+
+\subsubsection{Centroid Trees} %todo:cite dictionary matching problem--sources in cosb-tree paper
 
 The centroid tree in the COSB-tree is layed out in memory using a modified vEB
 (see Figure~\ref{fig:veb}) layout for weight-balanced binary trees. Instead of using height $h/2$, the
@@ -750,6 +760,8 @@ to rounding x down to the nearest power of a power of 2.
 %\emph{levels of detail}, as the centroid tree is traversed.
 % Should explain what "level of detail" means here
 
+\vfill
+
 The following approach is used to rebalance the centroid tree: put all the
 elements in DFS or Euler tour order for the compacted trie. Given this order,
 scan the trie to identify the centroid vertex. Then partition the trie into its
@@ -757,6 +769,8 @@ respective up and down tries, and recurse on the up and down tries. The Euler
 tour order can be found in $O(\log{N})$ scans, since the trie is only
 $O(\log{N})$ deep. Thus these updates have amortized cost of
 $O(1+(\log^{2}{N})/B)$ memory transfers.
+
+\vfill
 
 The following approach is used for maintaining the vEB layout of the centroid
 tree in the COSB-tree: first, weight balance is relaxed from a maximum weight
@@ -785,7 +799,7 @@ amortized $O(1+(\log^{2}N)/B)$ memory transfers.
 \begin{figure}
 
 \begin{center}
-	\includegraphics[width=0.8\columnwidth]{figures/centroidrelayoutexample.pdf}
+	\includegraphics[width=0.78\columnwidth]{figures/centroidrelayoutexample.pdf}
 \end{center}
 
 \caption{A centroid layout example. Assume the smallest subtrees in this
@@ -940,12 +954,11 @@ data structures to solve this problem: the first is an exponential CO B-tree,
 the second is a CO B-tree based on a packed memory array (PMA). Bender also
 presents a lock-free variant of the latter data structure.
 
+\newpage
 \subsection{Description}
 
 Before describing the data structures in more detail, we first consider
 the concurrency model which is used in \cite{BenderFiGi05}.
-
-\newpage
 
 \subsubsection{Concurrency Model}
 
@@ -1037,6 +1050,7 @@ access time from some level $h$ to find the correct child.
 	\textit{Concurrent Exponential CO B-tree} &   $O(\log_B{N} + \log_{\alpha}{\log{B}})$  &   $O(\log_B{N} + \log{\alpha}{\log{B}})$  \\ \hline
 	\textit{Concurrent PMA CO B-tree}  & $O(\log_{B}{N} + ({\log{N}})/{B} + 1)$ &   $O(\log_{B}{N} + (\log^2{N})/{B} + 1)$  \\ \hline
     \end{tabular}
+\vspace{-0.04in}
     \caption{A summary of the surveyed CO B-trees. The bounds are in terms of the number of memory transfers. The bounds for \textit{Concurrent Exponential CO B-tree} are in expectation only.}
     \label{fig:table}
 \end{center}
@@ -1110,14 +1124,14 @@ release the locks.
 % TODO: can somebody check this time-bound? seems kind of bad
 
 Sequential search time-bounds are not presented in the paper, but presumably
-since search is a static CO tree lookup followed by a scan, the time bound is
+since search is a static CO tree lookup and then a scan, the time bound is
 $O(\log_{B}{N} + ({\log{N}})/{B} + 1)$.
 
 
 Sequential insert is $O(\log_{B}{N} + (\log^2{N})/{B} + 1)$. The proof is based
 off an accounting argument which places $\Theta((\log^2{m})/B)$ dollars in each
 array slot. The proof is not presented in any detail in the paper, but rather
-the authors argue that it is simply a slightly-modified version of the proof
+the authors argue that it is a slightly-modified version of the proof
 presented in \cite{Katriel02}.
 
 
@@ -1171,9 +1185,6 @@ However, a store-conditional (SC) is performed on the destination of each
 cell. If any SC fails, then this means concurrent modification had occurred,
 in which case the algorithm restarts from the beginning.
 
-
-\vspace{0.1in}
-
 \section{Conclusion}
 
 
@@ -1184,14 +1195,12 @@ B-tree}, the \textit{cache-oblivious streaming B-tree}, and the \textit{cache-ob
 concurrent B-tree}. A summary of these data structures is provided
 in Figure~\ref{fig:table}.
 
-\vspace{0.1in}
 
 \section{Acknowledgments}
 
 We sincerely thank Dr. David Karger and all of the 6.854 TAs
 for their guidance, help, and support.
 
-\vspace{0.15in}
 
 %%%% May the Flow (Max-Flow, that is) be with you all.
 
